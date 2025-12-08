@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  # ✅ PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: nallahealth-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: nallahealthuser
+      POSTGRES_PASSWORD: nallahealthpassword
+      POSTGRES_DB: nallahealth_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nallahealthuser -d nallahealth_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # # ✅ Backend Service (Node.js + Express + Prisma)
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: mc2-backend
+  #   restart: always
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   ports:
+  #     - "5001:5001"
+  #   environment:
+  #     NODE_ENV: production
+  #     PORT: 5001
+  #     DATABASE_URL: postgresql://mc2user:mc2password@postgres:5432/mc2_dev
+  #     JWT_SECRET: supersecuresecretkey123
+  #   volumes:
+  #     - ./backend/src:/app/src
+  #     - ./backend/prisma:/app/prisma
+  #   command: sh -c "npx prisma migrate deploy && npm start"
+
+  # # ✅ Frontend Service (Vite.js + React)
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: frontend/Dockerfile
+  #   container_name: mc2-frontend
+  #   restart: always
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     VITE_API_URL: http://backend:5001/api
+  #   volumes:
+  #     - ./frontend/src:/app/src
+  #     - ./frontend/public:/app/public
+  #   command: sh -c "npm install && npm run build && npm run preview"
+
+volumes:
+  pgdata:

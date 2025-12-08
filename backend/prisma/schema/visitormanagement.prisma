@@ -1,0 +1,21 @@
+model VisitorManagement {
+  id              BigInt   @id
+  projectId       String
+  createdBy       String
+  name            String
+  companyName     String
+  idType          String
+  idNumber        String
+  phoneNumber     String
+  visitingLocation String
+  purposeOfVisit  String
+  vehicleNumber   String?
+  notes           String?
+  status          String
+  photo           String
+  checkInTime     DateTime
+  checkOutTime    DateTime?
+  updatedAt       DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id]) 
+}

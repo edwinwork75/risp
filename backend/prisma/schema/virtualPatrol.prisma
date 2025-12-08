@@ -1,0 +1,60 @@
+model VirtualPatrol_Routes {
+  id   String @id @default(uuid())
+  name String
+  projectId String?
+
+  routeCameras VirtualPatrol_RouteCameras[]
+  scheduleRoutes VirtualPatrol_ScheduleRoutes[]
+}
+
+model VirtualPatrol_RouteCameras {
+  id          String @id @default(uuid())
+  routeId     String
+  cameraId    String
+  projectId String?
+  order       Int
+  questionnaire Json
+
+  route VirtualPatrol_Routes @relation(fields: [routeId], references: [id])
+  camera Device               @relation(fields: [cameraId], references: [id],onDelete: Cascade)
+}
+
+model VirtualPatrol_Schedules {
+  id        String   @id @default(uuid())
+  name      String
+  description String?
+  startTime DateTime
+  endTime   DateTime
+  startDate DateTime?
+  endDate   DateTime?
+  projectId String?
+  status    String?
+  isDeleted Boolean?
+
+  scheduleRoutes VirtualPatrol_ScheduleRoutes[]
+}
+
+model VirtualPatrol_ScheduleRoutes {
+  id        String @id @default(uuid())
+  scheduleId String
+  routeId   String
+  order     Int
+  isDeleted Boolean?
+
+  schedule VirtualPatrol_Schedules @relation(fields: [scheduleId], references: [id],onDelete: Cascade)
+  route    VirtualPatrol_Routes    @relation(fields: [routeId], references: [id])
+  scheduleSessions VirtualPatrol_ScheduleSession[]
+
+}
+
+model VirtualPatrol_ScheduleSession {
+  id        String @id @default(uuid())
+  scheduleRouteId String
+  date DateTime
+  report    Json
+  status    String?
+  submittedTime DateTime?
+
+  scheduleRoute VirtualPatrol_ScheduleRoutes @relation(fields: [scheduleRouteId], references: [id])
+
+}

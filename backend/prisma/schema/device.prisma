@@ -1,0 +1,26 @@
+model Device {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String
+  make        String?
+  model       String?
+  ipAddress   String?
+  port        String?
+  channel     String?
+  url         String?
+  username    String?
+  password    String?
+  protocol    String
+  projectId   String
+  thumbnail   String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  project     Project  @relation(fields: [projectId], references: [id])
+
+  routeCameras VirtualPatrol_RouteCameras[]
+}
+
+

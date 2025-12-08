@@ -1,0 +1,327 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String                 @id @default(uuid())
+  email                  String                 @unique
+  password               String
+  name                   String
+  extras                 Json?
+  systemRole             SystemRole             @default(ORG_USER)
+  createdBy              String
+  updatedBy              String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  ActionCreated          Action[]               @relation("ActionCreatedBy")
+  ActionUpdated          Action[]               @relation("ActionUpdatedBy")
+  alternateContacts      AlternateContact[]  @relation(name: "UserToAlternateContacts")
+  alternateForContacts   AlternateContact[]  @relation(name: "ContactToAlternateUsers")
+  QuestionnaireCreated   Questionnaire[]        @relation("QuestionnaireCreatedBy")
+  QuestionnaireUpdated   Questionnaire[]        @relation("QuestionnaireUpdatedBy")
+  AssessmentScheduleCreated AssessmentSchedule[] @relation("AssessmentScheduleCreatedBy")
+  AssessmentScheduleUpdated AssessmentSchedule[] @relation("AssessmentScheduleUpdatedBy")
+  assessmentassignmentby AssessmentAssignment[] @relation("assessmentAssignmentAssignedBy")
+  assessmentassignmentsubmittedby AssessmentAssignment[] @relation("assessmentAssignmentSubmittedBy")
+  assessmentassignment   AssessmentAssignment[] @relation("assessmentAssignmentUserId")
+  members                GroupMember[]
+  orgUsers               OrgUser[]
+  organisationsCreated   Organisation[]         @relation("CreatedBy")
+  organisationsOwned     Organisation[]         @relation("OrganisationOwner")
+  organisationsUpdated   Organisation[]         @relation("UpdatedBy")
+  PermissionCreated      Permission[]           @relation("PermissionCreatedBy")
+  PermissionUpdated      Permission[]           @relation("PermissionUpdatedBy")
+  ProjectCreated         Project[]              @relation("ProjectCreatedBy")
+  ProjectUpdated         Project[]              @relation("ProjectUpdatedBy")
+  RolesCreated           Role[]                 @relation("RoleCreatedBy")
+  RolesUpdated           Role[]                 @relation("RoleUpdatedBy")
+  assessmentgroup        AssessmentGroup[]
+
+}
+
+model UserToken {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  isVerified       Boolean   @default(false)
+  verifyToken      String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  refreshToken     String?
+}
+
+model AlternateContact {
+  id           String  @id @default(uuid())
+  userId       String  
+  relationship String
+  contactId    String
+  user         User    @relation(name: "UserToAlternateContacts", fields: [userId], references: [id])
+  contact      User    @relation(name: "ContactToAlternateUsers", fields: [contactId], references: [id])
+
+}
+
+model Organisation {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  description     String?
+  ownerId         String
+  subscriptions   Json?
+  createdBy       String
+  updatedBy       String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  orgUsers        OrgUser[]
+  createdby       User             @relation("CreatedBy", fields: [createdBy], references: [id])
+  owner           User             @relation("OrganisationOwner", fields: [ownerId], references: [id])
+  updatedby       User             @relation("UpdatedBy", fields: [updatedBy], references: [id])
+  projects        Project[]
+  roles           Role[]
+  rolePermissions RolePermission[]
+  assessmentAssignments AssessmentAssignment[]
+
+}
+
+model OrgUser {
+  id             String        @id @default(uuid())
+  userId         String
+  organisationId String
+  roleId         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organisation   Organisation  @relation(fields: [organisationId], references: [id])
+  role           Role?         @relation(fields: [roleId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+  projectUsers   ProjectUser[]
+
+  @@unique([organisationId, userId], map: "organisationId_userId")
+}
+
+model Role {
+  id              String            @id @default(uuid())
+  organisationId  String?
+  name            String            @unique
+  description     String?
+  isSystemRole    Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       String
+  updatedBy       String
+  orgUsers        OrgUser[]
+  createdby       User              @relation("RoleCreatedBy", fields: [createdBy], references: [id])
+  organisation    Organisation?     @relation(fields: [organisationId], references: [id])
+  updatedby       User              @relation("RoleUpdatedBy", fields: [updatedBy], references: [id])
+  rolePermissions RolePermission[]
+
+  @@unique([organisationId, name])
+}
+
+model Permission {
+  id                String             @id @default(uuid())
+  organisationId    String?
+  name              String             @unique
+  description       String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  createdBy         String
+  updatedBy         String
+  createdby         User               @relation("PermissionCreatedBy", fields: [createdBy], references: [id])
+  updatedby         User               @relation("PermissionUpdatedBy", fields: [updatedBy], references: [id])
+  permissionActions PermissionAction[]
+  rolePermissions   RolePermission[]
+
+  @@unique([organisationId, name])
+}
+
+model Action {
+  id             String             @id @default(uuid())
+  organisationId String?
+  name           String             @unique
+  description    String?
+  extras         Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  createdBy      String
+  updatedBy      String
+  createdby      User               @relation("ActionCreatedBy", fields: [createdBy], references: [id])
+  updatedby      User               @relation("ActionUpdatedBy", fields: [updatedBy], references: [id])
+  actions        PermissionAction[]
+
+  @@unique([organisationId, name])
+}
+
+model PermissionAction {
+  id           String     @id @default(uuid())
+  permissionId String
+  actionId     String
+  action       Action     @relation(fields: [actionId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([permissionId, actionId])
+}
+
+model RolePermission {
+  id             String        @id @default(uuid())
+  roleId         String
+  permissionId   String
+  organisationId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  permission     Permission    @relation(fields: [permissionId], references: [id])
+  role           Role          @relation(fields: [roleId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model Project {
+  id                String               @id @default(uuid())
+  organisationId    String
+  name              String
+  description       String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  createdBy         String
+  updatedBy         String
+  assessments       Assessment[]
+  assessmentSchedules AssessmentSchedule[]
+  assessmentAssignments AssessmentAssignment[]
+  assessmentgroup   AssessmentGroup[]
+  createdby         User                 @relation("ProjectCreatedBy", fields: [createdBy], references: [id])
+  organisation      Organisation         @relation(fields: [organisationId], references: [id])
+  updatedby         User                 @relation("ProjectUpdatedBy", fields: [updatedBy], references: [id])
+  projectUsers      ProjectUser[]
+}
+
+model ProjectUser {
+  id        String  @id @default(uuid())
+  orgUserId String
+  projectId String
+  role      Json
+  details   Json?
+  orgUser   OrgUser @relation(fields: [orgUserId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@unique([orgUserId, projectId])
+}
+
+model Questionnaire {
+  id            String             @id @default(uuid())
+  slug          String             @unique
+  title         String
+  description   String?
+  questionnaire Json
+  minSpanDays   Int                @default(15)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  createdBy     String
+  updatedBy     String
+  createdby     User               @relation("QuestionnaireCreatedBy", fields: [createdBy], references: [id])
+  updatedby     User               @relation("QuestionnaireUpdatedBy", fields: [updatedBy], references: [id])
+  schedules     AssessmentSchedule[]
+}
+
+model AssessmentSchedule {
+  id               String                          @id @default(uuid())
+  projectId        String
+  title            String
+  description      String?
+  questionnaireId  String
+  createdAt        DateTime                        @default(now())
+  updatedAt        DateTime                        @updatedAt
+  createdBy        String
+  updatedBy        String
+  project          Project                         @relation(fields: [projectId], references: [id])
+  questionnaire    Questionnaire                   @relation(fields: [questionnaireId], references: [id])
+  createdby        User                            @relation("AssessmentScheduleCreatedBy", fields: [createdBy], references: [id])
+  updatedby        User                            @relation("AssessmentScheduleUpdatedBy", fields: [updatedBy], references: [id])
+  scheduleAssignments AssessmentScheduleAssignment[]
+  assessments      Assessment[]
+}
+
+model AssessmentScheduleAssignment {
+  id                   String            @id @default(uuid())
+  userGroupId          String
+  assessmentScheduleId String
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  userGroup            AssessmentGroup   @relation(fields: [userGroupId], references: [id])
+  assessmentSchedule   AssessmentSchedule @relation(fields: [assessmentScheduleId], references: [id])
+
+  @@unique([userGroupId, assessmentScheduleId])
+}
+
+model Assessment {
+  id                   String                 @id @default(uuid())
+  assessmentScheduleId String
+  startDate            DateTime
+  endDate              DateTime
+  projectId            String
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  assessmentSchedule   AssessmentSchedule     @relation(fields: [assessmentScheduleId], references: [id])
+  project              Project                @relation(fields: [projectId], references: [id])
+  assignments          AssessmentAssignment[]
+}
+
+model AssessmentAssignment {
+  id           String           @id @default(uuid())
+  organisationId String
+  projectId    String
+  userId       String
+  assignedBy   String
+  submittedBy  String?
+  submittedAt  DateTime?
+  status       AssignmentStatus
+  responses    Json?
+  report       Json?
+  assessmentId String
+  accessCode   String
+  accessSecret String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  assessment     Assessment   @relation(fields: [assessmentId], references: [id])
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
+  project        Project      @relation(fields: [projectId], references: [id])
+  assignedByUser User         @relation("assessmentAssignmentAssignedBy", fields: [assignedBy], references: [id])
+  submittedByUser User?       @relation("assessmentAssignmentSubmittedBy", fields: [submittedBy], references: [id])
+  user           User         @relation("assessmentAssignmentUserId", fields: [userId], references: [id])
+
+  @@unique([userId, assessmentId])
+}
+
+model AssessmentGroup {
+  id                          String                          @id @default(uuid())
+  name                        String
+  projectId                   String
+  managerId                   String
+  manager                     User                            @relation(fields: [managerId], references: [id])
+  project                     Project                         @relation(fields: [projectId], references: [id])
+  members                     GroupMember[]
+  scheduleAssignments         AssessmentScheduleAssignment[]
+}
+
+model GroupMember {
+  groupId String
+  userId  String
+  id      String          @id @default(uuid())
+  group   AssessmentGroup @relation(fields: [groupId], references: [id])
+  user    User            @relation(fields: [userId], references: [id])
+}
+
+enum SystemRole {
+  SUPER_USER
+  ORG_ADMIN
+  ORG_USER
+}
+
+enum AssignmentStatus {
+  PENDING
+  COMPLETED
+}
