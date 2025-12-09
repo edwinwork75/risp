@@ -32,6 +32,8 @@ interface ResponseItem {
 
 export default function FormPage() {
   const [answers, setAnswers] = useState<Record<number, { value: string; comment?: string }>>({});
+  const [files, setFiles] = useState<Record<number, File[]>>({});
+  const [isUploading, setIsUploading] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
@@ -102,6 +104,7 @@ export default function FormPage() {
     setShowResumeDialog(false);
     setSavedState(null);
     setAnswers({});
+    setFiles({});
   };
 
   useEffect(() => {
@@ -143,54 +146,79 @@ export default function FormPage() {
       return;
     }
 
-    const submittedAt = new Date().toISOString();
-    let finalScore = 0;
-
-    const responses: ResponseItem[] = Object.entries(answers).map(([questionId, answerData]) => {
-      const question = questions.find(q => q.id === parseInt(questionId));
-      const answer = answerData.value;
-      const comment = answerData.comment;
-      const optionIndex = question?.options?.indexOf(answer) ?? -1;
-      let score = 0;
-
-      if (optionIndex >= 0) {
-        score = question?.scoreType === "S" 
-          ? optionIndex + 1 
-          : 5 - optionIndex;
-        finalScore += score;
-      }
-
-      return {
-        question: question?.text || "Unknown question",
-        response: comment ? { value: answer, comment } : answer,
-        score,
-        section: question.section
-      };
-    });
-
-    const sectionScores = calculateSectionScores(responses);
-
-    const sectionReports = sectionScores.map((s) => {
-      const { mean, sd, recommendation } = getSectionStatsAndRecommendation(slug, s.section, s.score);
-      const normativeScore = mean && sd ? Math.round((mean - sd) * 100) / 100 : undefined;
-      return {
-        section: s.section,
-        score: s.score,
-        normativeScore,
-        recommendation,
-      };
-    });
-
-    responses.push({
-      question: "Final Score",
-      response: sectionReports,
-      score: finalScore,
-      section: null
-    });
-
-    console.log("Responses being sent:", responses);
+    setIsUploading(true);
 
     try {
+      const uploadedFileUrls: Record<number, string[]> = {};
+      for (const questionId in files) {
+        const fileList = files[questionId];
+        if (fileList && fileList.length > 0) {
+          uploadedFileUrls[parseInt(questionId)] = [];
+          for (const file of fileList) {
+            const formData = new FormData();
+            formData.append("file", file);
+            // This is an assumed endpoint. In a real project, replace with the actual one.
+            const response = await mcApiService.post(`/files/upload`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            uploadedFileUrls[parseInt(questionId)].push(response.data.url);
+          }
+        }
+      }
+
+      const submittedAt = new Date().toISOString();
+      let finalScore = 0;
+
+      const responses: ResponseItem[] = Object.entries(answers).map(([questionId, answerData]) => {
+        const question = questions.find(q => q.id === parseInt(questionId));
+        const answer = answerData.value;
+        const comment = answerData.comment;
+        const attachments = uploadedFileUrls[parseInt(questionId)];
+
+        const optionIndex = question?.options?.indexOf(answer) ?? -1;
+        let score = 0;
+
+        if (optionIndex >= 0) {
+          score = question?.scoreType === "S" 
+            ? optionIndex + 1 
+            : 5 - optionIndex;
+          finalScore += score;
+        }
+
+        const responsePayload: any = { value: answer };
+        if (comment) responsePayload.comment = comment;
+        if (attachments && attachments.length > 0) responsePayload.attachments = attachments;
+
+        return {
+          question: question?.text || "Unknown question",
+          response: (comment || (attachments && attachments.length > 0)) ? responsePayload : answer,
+          score,
+          section: question.section
+        };
+      });
+
+      const sectionScores = calculateSectionScores(responses);
+
+      const sectionReports = sectionScores.map((s) => {
+        const { mean, sd, recommendation } = getSectionStatsAndRecommendation(slug, s.section, s.score);
+        const normativeScore = mean && sd ? Math.round((mean - sd) * 100) / 100 : undefined;
+        return {
+          section: s.section,
+          score: s.score,
+          normativeScore,
+          recommendation,
+        };
+      });
+
+      responses.push({
+        question: "Final Score",
+        response: sectionReports,
+        score: finalScore,
+        section: null
+      });
+
+      console.log("Responses being sent:", responses);
+
       await mcApiService.patch(
         `/organisations/${organisationId}/assessment-assignments/${assignmentId}/response`,
         {
@@ -204,9 +232,14 @@ export default function FormPage() {
       );
 
       clearLocalStorage();
+      setFiles({});
       router.push(`./thank-you?finalScore=${finalScore}`);
+
     } catch (error) {
       console.error("Error submitting responses:", error);
+      alert("There was an error submitting your assessment. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -221,6 +254,13 @@ export default function FormPage() {
     setAnswers(prev => ({
       ...prev,
       [questionId]: { ...prev[questionId], comment }
+    }));
+  };
+
+  const handleFilesChange = (questionId: number, files: File[]) => {
+    setFiles(prev => ({
+      ...prev,
+      [questionId]: files
     }));
   };
 
@@ -256,6 +296,7 @@ export default function FormPage() {
 
   const renderQuestion = (question: any, index: number) => {
     const answer = answers[question.id];
+    const questionFiles = files[question.id];
     
     switch (question.type) {
       case "multiple-choice":
@@ -265,8 +306,10 @@ export default function FormPage() {
             options={question.options || []}
             onChange={(val) => handleAnswer(question.id, val)}
             onCommentChange={(comment) => handleCommentChange(question.id, comment)}
+            onFilesChange={(files) => handleFilesChange(question.id, files)}
             value={answer?.value}
             comment={answer?.comment}
+            files={questionFiles}
           />
         );
       case "number":
@@ -275,8 +318,10 @@ export default function FormPage() {
             question={`${index + 1}. ${question.text}`}
             onChange={(val) => handleAnswer(question.id, val)}
             onCommentChange={(comment) => handleCommentChange(question.id, comment)}
+            onFilesChange={(files) => handleFilesChange(question.id, files)}
             value={answer?.value}
             comment={answer?.comment}
+            files={questionFiles}
           />
         );
       case "short-answer":
@@ -285,8 +330,10 @@ export default function FormPage() {
             question={`${index + 1}. ${question.text}`}
             onChange={(val) => handleAnswer(question.id, val)}
             onCommentChange={(comment) => handleCommentChange(question.id, comment)}
+            onFilesChange={(files) => handleFilesChange(question.id, files)}
             value={answer?.value}
             comment={answer?.comment}
+            files={questionFiles}
           />
         );
       case "radio":
@@ -296,8 +343,10 @@ export default function FormPage() {
             options={question.options || []}
             onChange={(val) => handleAnswer(question.id, val)}
             onCommentChange={(comment) => handleCommentChange(question.id, comment)}
+            onFilesChange={(files) => handleFilesChange(question.id, files)}
             value={answer?.value}
             comment={answer?.comment}
+            files={questionFiles}
           />
         );
       case "dropdown":
@@ -307,8 +356,10 @@ export default function FormPage() {
             options={question.options || []}
             onChange={(val) => handleAnswer(question.id, val)}
             onCommentChange={(comment) => handleCommentChange(question.id, comment)}
+            onFilesChange={(files) => handleFilesChange(question.id, files)}
             value={answer?.value}
             comment={answer?.comment}
+            files={questionFiles}
           />
         );
       default:
@@ -333,9 +384,10 @@ export default function FormPage() {
                 <Button
                   onClick={() => setShowSubmitConfirmation(true)}
                   className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+                  disabled={isUploading}
                 >
-                  Submit
-                  <Send className="h-4 w-4" />
+                  {isUploading ? "Submitting..." : "Submit"}
+                  {!isUploading && <Send className="h-4 w-4" />}
                 </Button>
               </div>
             </>

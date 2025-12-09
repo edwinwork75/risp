@@ -4,17 +4,20 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
+import FileUpload from "./FileUpload";
 
 interface RadioQuestionProps {
   question: string;
   options: string[];
   onChange: (value: string) => void;
   onCommentChange: (comment: string) => void;
+  onFilesChange: (files: File[]) => void;
   value?: string;
   comment?: string;
+  files?: File[];
 }
 
-export default function RadioQuestion({ question, options, onChange, onCommentChange, value, comment }: RadioQuestionProps) {
+export default function RadioQuestion({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files }: RadioQuestionProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -39,7 +42,10 @@ export default function RadioQuestion({ question, options, onChange, onCommentCh
           </div>
         ))}
       </RadioGroup>
-      <CommentBox onChange={onCommentChange} comment={comment} />
+      <div className="space-y-2">
+        <CommentBox onChange={onCommentChange} comment={comment} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+      </div>
     </motion.div>
   );
 }

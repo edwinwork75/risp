@@ -4,16 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
+import FileUpload from "./FileUpload";
 
 interface ShortAnswerProps {
   question: string;
   onChange: (value: string) => void;
   onCommentChange: (comment: string) => void;
+  onFilesChange: (files: File[]) => void;
   value?: string;
   comment?: string;
+  files?: File[];
 }
 
-export default function ShortAnswer({ question, onChange, onCommentChange, value, comment }: ShortAnswerProps) {
+export default function ShortAnswer({ question, onChange, onCommentChange, onFilesChange, value, comment, files }: ShortAnswerProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,7 +35,10 @@ export default function ShortAnswer({ question, onChange, onCommentChange, value
           className="text-lg"
         />
       </div>
-      <CommentBox onChange={onCommentChange} comment={comment} />
+      <div className="space-y-2">
+        <CommentBox onChange={onCommentChange} comment={comment} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+      </div>
     </motion.div>
   );
 }

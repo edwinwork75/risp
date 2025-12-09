@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Select,
   SelectContent,
@@ -9,17 +7,20 @@ import {
 } from "@/components/ui/select";
 import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
+import FileUpload from "./FileUpload";
 
 interface DropdownProps {
   question: string;
   options: string[];
   onChange: (value: string) => void;
   onCommentChange: (comment: string) => void;
+  onFilesChange: (files: File[]) => void;
   value?: string;
   comment?: string;
+  files?: File[];
 }
 
-export default function Dropdown({ question, options, onChange, onCommentChange, value, comment }: DropdownProps) {
+export default function Dropdown({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files }: DropdownProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -42,7 +43,10 @@ export default function Dropdown({ question, options, onChange, onCommentChange,
         </SelectContent>
       </Select>
 
-      <CommentBox onChange={onCommentChange} comment={comment} />
+      <div className="space-y-2">
+        <CommentBox onChange={onCommentChange} comment={comment} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+      </div>
     </motion.div>
   );
 }

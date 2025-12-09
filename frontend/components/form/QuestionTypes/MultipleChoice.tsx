@@ -5,17 +5,20 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
+import FileUpload from "./FileUpload";
 
 interface MultipleChoiceProps {
   question: string;
   options: string[];
   onChange: (value: string) => void;
   onCommentChange: (comment: string) => void;
+  onFilesChange: (files: File[]) => void;
   value?: string;
   comment?: string;
+  files?: File[];
 }
 
-export default function MultipleChoice({ question, options, onChange, onCommentChange, value, comment }: MultipleChoiceProps) {
+export default function MultipleChoice({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files }: MultipleChoiceProps) {
   const [selectedOption, setSelectedOption] = useState<string | undefined>(value);
   const [isBlinking, setIsBlinking] = useState(false);
 
@@ -60,7 +63,10 @@ export default function MultipleChoice({ question, options, onChange, onCommentC
           </motion.div>
         ))}
       </RadioGroup>
-      <CommentBox onChange={onCommentChange} comment={comment} />
+      <div className="space-y-2">
+        <CommentBox onChange={onCommentChange} comment={comment} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+      </div>
     </motion.div>
   );
 }
