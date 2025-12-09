@@ -15,4 +15,12 @@ export const wellbeingQuestions = [
     section: "Feedback",
     optional: true,
   },
+  {
+    id: 3,
+    text: "This is a dropdown question.",
+    type: "dropdown",
+    options: ["Option 1", "Option 2", "Option 3"],
+    section: "Feedback",
+    optional: false,
+  },
 ];

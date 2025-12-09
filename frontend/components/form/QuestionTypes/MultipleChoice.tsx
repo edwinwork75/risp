@@ -4,15 +4,18 @@ import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "@/components/ui/motion";
+import CommentBox from "./CommentBox";
 
 interface MultipleChoiceProps {
   question: string;
   options: string[];
   onChange: (value: string) => void;
+  onCommentChange: (comment: string) => void;
   value?: string;
+  comment?: string;
 }
 
-export default function MultipleChoice({ question, options, onChange, value }: MultipleChoiceProps) {
+export default function MultipleChoice({ question, options, onChange, onCommentChange, value, comment }: MultipleChoiceProps) {
   const [selectedOption, setSelectedOption] = useState<string | undefined>(value);
   const [isBlinking, setIsBlinking] = useState(false);
 
@@ -34,12 +37,12 @@ export default function MultipleChoice({ question, options, onChange, value }: M
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      <h2 className="text-2xl font-semibold tracking-tight">{question}</h2>
+      <h2 className="text-xl font-medium tracking-tight">{question}</h2>
       
       <RadioGroup 
         value={value} 
         onValueChange={handleChange}
-        className="space-y-3"
+        className="space-y-2"
       >        {options.map((option) => (
           <motion.div
             key={option}
@@ -53,10 +56,11 @@ export default function MultipleChoice({ question, options, onChange, value }: M
             onClick={() => handleChange(option)}
           >
             <RadioGroupItem value={option} id={option} />
-            <Label htmlFor={option} className="text-lg cursor-pointer flex-1">{option}</Label>
+            <Label htmlFor={option} className="text-base cursor-pointer flex-1">{option}</Label>
           </motion.div>
         ))}
       </RadioGroup>
+      <CommentBox onChange={onCommentChange} comment={comment} />
     </motion.div>
   );
 }

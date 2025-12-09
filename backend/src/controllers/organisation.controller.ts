@@ -4011,6 +4011,7 @@ export const updateAssessmentAssignmentResponses = async (req: Request, res: Res
 
     if (!responses) {
       res.status(400).json({ message: "Responses are required" });
+      return;
     }
 
     // Check if the assignment exists and belongs to the organisation
@@ -4020,6 +4021,7 @@ export const updateAssessmentAssignmentResponses = async (req: Request, res: Res
 
     if (!assignment) {
       res.status(404).json({ message: "Assignment not found for this organisation" });
+      return;
     }
 
     const updatedAssignment = await prisma.assessmentAssignment.update({

@@ -3,15 +3,18 @@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { motion } from "@/components/ui/motion";
+import CommentBox from "./CommentBox";
 
 interface RadioQuestionProps {
   question: string;
   options: string[];
   onChange: (value: string) => void;
+  onCommentChange: (comment: string) => void;
   value?: string;
+  comment?: string;
 }
 
-export default function RadioQuestion({ question, options, onChange, value }: RadioQuestionProps) {
+export default function RadioQuestion({ question, options, onChange, onCommentChange, value, comment }: RadioQuestionProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -19,11 +22,11 @@ export default function RadioQuestion({ question, options, onChange, value }: Ra
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6"
     >
-      <h2 className="text-2xl font-semibold tracking-tight">{question}</h2>
+      <h2 className="text-xl font-medium tracking-tight">{question}</h2>
         <RadioGroup 
         value={value} 
         onValueChange={onChange}
-        className="space-y-3"
+        className="space-y-2"
       >
         {options.map((option) => (
           <div 
@@ -32,10 +35,11 @@ export default function RadioQuestion({ question, options, onChange, value }: Ra
             onClick={() => onChange(option)}
           >
             <RadioGroupItem value={option} id={option} />
-            <Label htmlFor={option} className="text-lg cursor-pointer flex-1">{option}</Label>
+            <Label htmlFor={option} className="text-base cursor-pointer flex-1">{option}</Label>
           </div>
         ))}
       </RadioGroup>
+      <CommentBox onChange={onCommentChange} comment={comment} />
     </motion.div>
   );
 }

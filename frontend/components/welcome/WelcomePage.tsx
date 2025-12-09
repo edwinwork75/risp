@@ -9,7 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Heart, KeyRound } from "lucide-react";
 import { mcApiService } from "@/lib/mcApiService";
 
-export default function WelcomePage() {
+interface WelcomePageProps {
+  isAuthenticated?: boolean;
+  isSuperAdmin?: boolean;
+}
+
+export default function WelcomePage({ isAuthenticated, isSuperAdmin }: WelcomePageProps) {
   const [accessCode, setAccessCode] = useState("");
   const [accessKey, setAccessKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -22,13 +27,7 @@ export default function WelcomePage() {
     // Super user override
     const superParam = searchParams.get('super');
     if (superParam === 'true') {
-      const superUserData = {
-        id: 'super-user-assignment-id',
-        userId: 'super-user-id',
-        slug: 'super-user-slug',
-        organisationId: 'super-user-org-id',
-      };
-      router.push(`./q/form?id=${superUserData.id}&userId=${superUserData.userId}&slug=${superUserData.slug}&organisationId=${superUserData.organisationId}`);
+      handleSuperUserBypass();
       return; // Stop further processing
     }
 
@@ -51,6 +50,16 @@ export default function WelcomePage() {
       }, 100);
     }
   }, [searchParams, router]);
+
+  const handleSuperUserBypass = () => {
+    const superUserData = {
+      id: 'super-user-assignment-id',
+      userId: 'super-user-id',
+      slug: 'super-user-slug',
+      organisationId: 'super-user-org-id',
+    };
+    router.push(`./q/form?id=${superUserData.id}&userId=${superUserData.userId}&slug=${superUserData.slug}&organisationId=${superUserData.organisationId}`);
+  };
 
   const handleSubmit = async (e: React.FormEvent | null, code?: string, key?: string) => {
     if (e) e.preventDefault();
@@ -127,7 +136,7 @@ export default function WelcomePage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex-col space-y-2">
             <Button 
               type="submit" 
               className="w-full transition-all duration-300 hover:scale-[1.02]"
@@ -135,6 +144,15 @@ export default function WelcomePage() {
             >
               {isLoading ? "Verifying..." : "Continue to Form"}
             </Button>
+            {isAuthenticated && isSuperAdmin && (
+              <Button 
+                onClick={handleSuperUserBypass}
+                className="w-full transition-all duration-300 hover:scale-[1.02] mt-2"
+                variant="secondary"
+              >
+                Super User Bypass
+              </Button>
+            )}
           </CardFooter>
         </form>
       </Card>
