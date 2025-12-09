@@ -39,6 +39,11 @@ export const ProtectedComponent = ({
     return <div className="animate-pulse h-4 w-4 bg-muted rounded" />;
   }
 
+  // SUPER USER BYPASS
+if (hasSystemRole("SUPER_USER")) {
+  return <>{children}</>;
+}
+
   // Check SystemRole first if required
   if (requiredSystemRole) {
     if (!hasSystemRole(requiredSystemRole)) {

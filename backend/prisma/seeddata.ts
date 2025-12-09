@@ -8,7 +8,7 @@ async function seedData() {
 
   try {
     // 1️⃣ Create Users
-    const users: Array<{ id: string; email: string; name: string; password: string; systemRole: SystemRole; createdBy: string; updatedBy: string }> = [];
+    const users: Array<{ id: string; email: string; name: string; password: string; systemRole: SystemRole; createdBy: string; updatedBy: string | null }> = [];
     for (let i = 1; i <= 10; i++) {
       const user = await prisma.user.create({
         data: {
@@ -165,21 +165,69 @@ async function seedData() {
     }
     console.log("Projects created:", projects);
 
-    // 🔟 Create Assessments
-    const assessments: Array<{ id: string; title: string; organisationId: string; description: string; questions: { question: string }; createdBy: string; updatedBy: string }> = [];
+    // 🔟 Create Questionnaires
+    const questionnaires = [];
     for (let i = 1; i <= 10; i++) {
-      const assessment = await prisma.assessment.create({
+      const questionnaire = await prisma.questionnaire.create({
         data: {
           id: uuidv4(),
-          title: `Assessment ${i}`,
-          organisationId: organisations[i - 1].id,
-          description: `Description for Assessment ${i}`,
-          questions: { question: `Question ${i}` },
+          slug: `questionnaire-${i}`,
+          title: `Sample Questionnaire ${i}`,
+          description: `Description for Sample Questionnaire ${i}`,
+          questionnaire: {
+            "question1": "What is your name?",
+            "question2": "What is your age?"
+          } as any,
+          minSpanDays: 15,
           createdBy: users[i - 1].id,
           updatedBy: users[i - 1].id,
         },
       });
-      assessments.push({ id: assessment.id, title: assessment.title, organisationId: assessment.organisationId, description: assessment.description, questions: assessment.questions, createdBy: assessment.createdBy, updatedBy: assessment.updatedBy });
+      questionnaires.push(questionnaire);
+    }
+    console.log("Questionnaires created:", questionnaires);
+
+    // 1️⃣1️⃣ Create Assessment Schedules
+    const assessmentSchedules: Array<{
+      id: string;
+      projectId: string;
+      title: string;
+      description: string | null;
+      questionnaireId: string;
+      createdBy: string;
+      updatedBy: string;
+    }> = [];
+    for (let i = 1; i <= 10; i++) {
+      const assessmentSchedule = await prisma.assessmentSchedule.create({
+        data: {
+          id: uuidv4(),
+          projectId: projects[i - 1].id,
+          title: `Assessment Schedule ${i}`,
+          description: `Description for Assessment Schedule ${i}`,
+          questionnaireId: questionnaires[i - 1].id,
+          createdBy: users[i - 1].id,
+          updatedBy: users[i - 1].id,
+        },
+      });
+      assessmentSchedules.push(assessmentSchedule);
+    }
+    console.log("Assessment Schedules created:", assessmentSchedules);
+
+    console.log("Assessment Schedules created:", assessmentSchedules);
+
+    // 1️⃣2️⃣ Create Assessments
+    const assessments: Array<{ id: string; assessmentScheduleId: string; startDate: Date; endDate: Date; projectId: string }> = [];
+    for (let i = 1; i <= 10; i++) {
+      const assessment = await prisma.assessment.create({
+        data: {
+          id: uuidv4(),
+          assessmentScheduleId: assessmentSchedules[i - 1].id,
+          projectId: projects[i - 1].id,
+          startDate: new Date(),
+          endDate: new Date(new Date().setDate(new Date().getDate() + 30)), // 30 days from now
+        },
+      });
+      assessments.push(assessment);
     }
     console.log("Assessments created:", assessments);
 

@@ -17,8 +17,21 @@ export default function WelcomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Auto-populate fields from URL parameters and auto-submit if both are present
+  // Super user override and auto-populate
   useEffect(() => {
+    // Super user override
+    const superParam = searchParams.get('super');
+    if (superParam === 'true') {
+      const superUserData = {
+        id: 'super-user-assignment-id',
+        userId: 'super-user-id',
+        slug: 'super-user-slug',
+        organisationId: 'super-user-org-id',
+      };
+      router.push(`./q/form?id=${superUserData.id}&userId=${superUserData.userId}&slug=${superUserData.slug}&organisationId=${superUserData.organisationId}`);
+      return; // Stop further processing
+    }
+
     const codeParam = searchParams.get('code');
     const keyParam = searchParams.get('key');
     
@@ -37,7 +50,7 @@ export default function WelcomePage() {
         handleSubmit(null, codeParam, keyParam);
       }, 100);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent | null, code?: string, key?: string) => {
     if (e) e.preventDefault();

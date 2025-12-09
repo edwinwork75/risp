@@ -269,6 +269,7 @@ export default function QuestionnairesPage() {
       </div>
     );
   }
+console.log("Hai ",{ user, organizations });
 
   return (
     <div className="p-4 md:p-10 mx-auto max-w-7xl">
@@ -278,6 +279,7 @@ export default function QuestionnairesPage() {
         requiredActions={["questionnaires.list", "questionnaires.read"]}
         orgId={currentOrgId}
         fallback={
+
           <div className="text-center py-10">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-2 text-sm font-semibold text-gray-900">Access Denied</h3>
