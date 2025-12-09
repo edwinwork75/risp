@@ -14,9 +14,10 @@ interface ShortAnswerProps {
   value?: string;
   comment?: string;
   files?: File[];
+  fileUrls?: { name: string; url: string }[];
 }
 
-export default function ShortAnswer({ question, onChange, onCommentChange, onFilesChange, value, comment, files }: ShortAnswerProps) {
+export default function ShortAnswer({ question, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: ShortAnswerProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -37,7 +38,7 @@ export default function ShortAnswer({ question, onChange, onCommentChange, onFil
       </div>
       <div className="space-y-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
-        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
     </motion.div>
   );

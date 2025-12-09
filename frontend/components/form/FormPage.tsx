@@ -33,6 +33,7 @@ interface ResponseItem {
 export default function FormPage() {
   const [answers, setAnswers] = useState<Record<number, { value: string; comment?: string }>>({});
   const [files, setFiles] = useState<Record<number, File[]>>({});
+  const [fileObjectUrls, setFileObjectUrls] = useState<Record<number, {name: string, url: string}[]>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false);
@@ -127,6 +128,27 @@ export default function FormPage() {
       fetchQuestions();
     }
   }, [slug]);
+
+  useEffect(() => {
+    const newUrls: Record<number, {name: string, url: string}[]> = {};
+    for (const questionId in files) {
+        if (files[questionId]) {
+            newUrls[questionId] = files[questionId].map(file => ({
+                name: file.name,
+                url: URL.createObjectURL(file)
+            }));
+        }
+    }
+    setFileObjectUrls(newUrls);
+
+    return () => {
+        for (const questionId in newUrls) {
+            if (newUrls[questionId]) {
+                newUrls[questionId].forEach(file => URL.revokeObjectURL(file.url));
+            }
+        }
+    };
+  }, [files]);
 
   useEffect(() => {
     if (questions.length > 0 && !showIntro) {
@@ -297,6 +319,7 @@ export default function FormPage() {
   const renderQuestion = (question: any, index: number) => {
     const answer = answers[question.id];
     const questionFiles = files[question.id];
+    const questionFileUrls = fileObjectUrls[question.id];
     
     switch (question.type) {
       case "multiple-choice":
@@ -310,6 +333,7 @@ export default function FormPage() {
             value={answer?.value}
             comment={answer?.comment}
             files={questionFiles}
+            fileUrls={questionFileUrls}
           />
         );
       case "number":
@@ -322,6 +346,7 @@ export default function FormPage() {
             value={answer?.value}
             comment={answer?.comment}
             files={questionFiles}
+            fileUrls={questionFileUrls}
           />
         );
       case "short-answer":
@@ -334,6 +359,7 @@ export default function FormPage() {
             value={answer?.value}
             comment={answer?.comment}
             files={questionFiles}
+            fileUrls={questionFileUrls}
           />
         );
       case "radio":
@@ -347,6 +373,7 @@ export default function FormPage() {
             value={answer?.value}
             comment={answer?.comment}
             files={questionFiles}
+            fileUrls={questionFileUrls}
           />
         );
       case "dropdown":
@@ -360,6 +387,7 @@ export default function FormPage() {
             value={answer?.value}
             comment={answer?.comment}
             files={questionFiles}
+            fileUrls={questionFileUrls}
           />
         );
       default:

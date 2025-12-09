@@ -14,9 +14,10 @@ interface NumberInputProps {
   value?: string;
   comment?: string;
   files?: File[];
+  fileUrls?: { name: string; url: string }[];
 }
 
-export default function NumberInput({ question, onChange, onCommentChange, onFilesChange, value, comment, files }: NumberInputProps) {
+export default function NumberInput({ question, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: NumberInputProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,7 +39,7 @@ export default function NumberInput({ question, onChange, onCommentChange, onFil
       </div>
       <div className="space-y-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
-        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
     </motion.div>
   );

@@ -15,9 +15,10 @@ interface RadioQuestionProps {
   value?: string;
   comment?: string;
   files?: File[];
+  fileUrls?: { name: string; url: string }[];
 }
 
-export default function RadioQuestion({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files }: RadioQuestionProps) {
+export default function RadioQuestion({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: RadioQuestionProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -44,7 +45,7 @@ export default function RadioQuestion({ question, options, onChange, onCommentCh
       </RadioGroup>
       <div className="space-y-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
-        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
     </motion.div>
   );

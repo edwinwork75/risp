@@ -16,9 +16,10 @@ interface MultipleChoiceProps {
   value?: string;
   comment?: string;
   files?: File[];
+  fileUrls?: { name: string; url: string }[];
 }
 
-export default function MultipleChoice({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files }: MultipleChoiceProps) {
+export default function MultipleChoice({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: MultipleChoiceProps) {
   const [selectedOption, setSelectedOption] = useState<string | undefined>(value);
   const [isBlinking, setIsBlinking] = useState(false);
 
@@ -65,7 +66,7 @@ export default function MultipleChoice({ question, options, onChange, onCommentC
       </RadioGroup>
       <div className="space-y-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
-        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
     </motion.div>
   );

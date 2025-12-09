@@ -9,9 +9,10 @@ interface FileUploadProps {
   onFilesChange: (files: File[]) => void;
   files: File[];
   className?: string;
+  fileUrls?: { name: string; url: string }[];
 }
 
-export default function FileUpload({ onFilesChange, files = [], className }: FileUploadProps) {
+export default function FileUpload({ onFilesChange, files = [], className, fileUrls }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,17 +43,31 @@ export default function FileUpload({ onFilesChange, files = [], className }: Fil
         onChange={handleFileChange}
       />
       <div className="space-y-2">
-        {files.map((file, index) => (
-          <div key={index} className="flex items-center justify-between p-2 rounded-md border text-sm">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <FileIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-              <span className="font-medium truncate">{file.name}</span>
+        {files.map((file, index) => {
+          const fileUrl = fileUrls?.find(f => f.name === file.name)?.url;
+          return (
+            <div key={index} className="flex items-center justify-between p-2 rounded-md border text-sm">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <FileIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                {fileUrl ? (
+                  <a
+                    href={fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium truncate hover:underline"
+                  >
+                    {file.name}
+                  </a>
+                ) : (
+                  <span className="font-medium truncate">{file.name}</span>
+                )}
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleRemoveFile(file)}>
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleRemoveFile(file)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

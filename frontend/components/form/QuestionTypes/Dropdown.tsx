@@ -18,9 +18,10 @@ interface DropdownProps {
   value?: string;
   comment?: string;
   files?: File[];
+  fileUrls?: { name: string; url: string }[];
 }
 
-export default function Dropdown({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files }: DropdownProps) {
+export default function Dropdown({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: DropdownProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -45,7 +46,7 @@ export default function Dropdown({ question, options, onChange, onCommentChange,
 
       <div className="space-y-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
-        <FileUpload onFilesChange={onFilesChange} files={files || []} />
+        <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
     </motion.div>
   );
