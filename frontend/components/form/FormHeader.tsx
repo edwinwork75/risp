@@ -20,7 +20,7 @@ export default function FormHeader({ showProgress = true, progress = 0 }: FormHe
           onClick={() => router.push("/")}
         >
 <h1 className="text-3xl font-bold tracking-tight text-primary mb-6">
-  RISP
+  Remote Inspection & Supervision Platform
 </h1>
         </div>
       </div>

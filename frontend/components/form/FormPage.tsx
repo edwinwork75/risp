@@ -15,6 +15,9 @@ import Dropdown from "@/components/form/QuestionTypes/Dropdown";
 import DateQuestion from "@/components/form/QuestionTypes/DateQuestion";
 import CheckMethod from "@/components/form/QuestionTypes/CheckMethod";
 import DualResponseDate from "@/components/form/QuestionTypes/DualResponseDate";
+import ExcelChecklistLayout from "@/components/form/ExcelChecklistLayout";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
@@ -45,6 +48,7 @@ export default function FormPage() {
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [savedState, setSavedState] = useState<AssessmentState | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const topOfFormRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -343,17 +347,22 @@ export default function FormPage() {
     }
   };
 
-  const renderCurrentSection = () => {
+  const getGlobalQuestionIndex = () => {
+    let index = 0;
+    for (let i = 0; i < currentPage; i++) {
+      if (sections[i][0] === 'Project Information') {
+        index += sections[i][1].length;
+      }
+    }
+    return index;
+  };
+
+  const renderCurrentSection = (globalIndex: number) => {
     if (sections.length === 0) return null;
 
     const [sectionName, sectionQuestions] = sections[currentPage];
-    let globalQuestionIndex = 0;
-    for (let i = 0; i < currentPage; i++) {
-      if (sections[i][0] === 'Project Information') {
-        globalQuestionIndex += sections[i][1].length;
-      }
-    }
 
+    // Card View Rendering
     return (
       <div className="space-y-6">
         {sectionName !== "General" && (
@@ -364,7 +373,7 @@ export default function FormPage() {
         {sectionQuestions.map((question, index) => {
           const questionPrefix =
             sectionName === 'Project Information'
-              ? `${globalQuestionIndex + index + 1}.`
+              ? `${globalIndex + index + 1}.`
               : `${String.fromCharCode(97 + index)}.`;
 
           return (
@@ -425,7 +434,16 @@ export default function FormPage() {
     }
   };
 
+  // Determine current section properties
+  const currentSectionName = sections.length > 0 ? sections[currentPage][0] : "";
+  const effectiveViewMode = currentSectionName === "Project Information" ? "card" : viewMode;
+
+  // Calculate progress
   const progress = sections.length > 0 ? ((currentPage + 1) / sections.length) * 100 : 0;
+
+  // Prepare data for rendering
+  const globalQuestionIndex = sections.length > 0 ? getGlobalQuestionIndex() : 0;
+  const currentSectionQuestions = sections.length > 0 ? sections[currentPage][1] : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-background">
@@ -439,9 +457,49 @@ export default function FormPage() {
             </div>
           ) : (
             <>
+              {currentSectionName !== "Project Information" && (
+                <div className="flex justify-end mb-6">
+                  <ToggleGroup
+                    type="single"
+                    value={effectiveViewMode}
+                    onValueChange={(v) => v && setViewMode(v as 'card' | 'table')}
+                    className="bg-gray-100 p-1 rounded-full border border-gray-200 shadow-inner"
+                  >
+                    <ToggleGroupItem
+                      value="card"
+                      aria-label="Card View"
+                      className="rounded-full px-4 py-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:font-bold data-[state=on]:shadow-sm transition-all duration-300 ease-in-out hover:bg-gray-200 data-[state=on]:hover:bg-primary/90"
+                    >
+                      <LayoutGrid className="h-4 w-4 mr-2" />
+                      Card View
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="table"
+                      aria-label="Table View"
+                      className="rounded-full px-4 py-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:font-bold data-[state=on]:shadow-sm transition-all duration-300 ease-in-out hover:bg-gray-200 data-[state=on]:hover:bg-primary/90"
+                    >
+                      <TableIcon className="h-4 w-4 mr-2" />
+                      Excel View
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              )}
+
               <div ref={topOfFormRef} className="space-y-8">
-                {renderCurrentSection()}
+                {effectiveViewMode === 'card' ? renderCurrentSection(globalQuestionIndex) : (
+                  <ExcelChecklistLayout
+                    questions={currentSectionQuestions}
+                    answers={answers}
+                    files={files}
+                    fileUrls={fileObjectUrls}
+                    onAnswer={handleAnswer}
+                    onCommentChange={handleCommentChange}
+                    onFilesChange={handleFilesChange}
+                    globalStartIndex={globalQuestionIndex}
+                  />
+                )}
               </div>
+
               <div className="mt-8 flex justify-between items-center">
                 {currentPage > 0 && (
                   <Button onClick={handlePrevPage} variant="outline">
