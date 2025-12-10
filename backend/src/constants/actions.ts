@@ -176,7 +176,10 @@ export const SUPER_USER_ONLY_ACTIONS = [
     //! for Now Superuser only
     "questionnaires.create",
     "questionnaires.delete",
-    "questionnaires.update"
+    "questionnaires.update",
+    "questionnaires.list",
+    "questionnaires.read",
+
 ];
 
 // Flatten actions into a single array for easy listing
