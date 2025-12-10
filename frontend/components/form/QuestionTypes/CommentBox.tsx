@@ -1,11 +1,8 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageSquarePlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 interface CommentBoxProps {
   onChange: (comment: string) => void;
@@ -13,63 +10,73 @@ interface CommentBoxProps {
   className?: string;
 }
 
-export default function CommentBox({ onChange, comment, className }: CommentBoxProps) {
-  const [open, setOpen] = useState(!!comment);
+export default function CommentBox({ onChange, comment = "", className }: CommentBoxProps) {
+  const [open, setOpen] = useState(Boolean(comment));
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const handleToggle = () => {
-    if (open) {
-      onChange(""); // reset comment
+  // Auto-open when comment exists externally (edit mode)
+  useEffect(() => {
+    if (comment) setOpen(true);
+  }, [comment]);
+
+  const handleBlur = () => {
+    // Collapse only if no text
+    if (!comment) {
+      setOpen(false);
     }
-    setOpen(!open);
   };
 
   return (
-    <div className={cn("mt-4 space-y-3", className)}>
-      {/* Add Comment Button */}
+    <div className={cn("w-full pb-4", className)}>
+      
+      {/* Collapsed state — fake input */}
       {!open && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggle}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/40 transition"
+        <div
+          onClick={() => {
+            setOpen(true);
+            setTimeout(() => textareaRef.current?.focus(), 10);
+          }}
+          className="
+            text-xs text-gray-500
+            px-3 py-2 
+            border rounded-md 
+            bg-white 
+            cursor-text
+            hover:bg-gray-50
+          "
         >
-          <MessageSquarePlus className="h-4 w-4" />
-          Add a comment
-        </Button>
+          Add a comment…
+        </div>
       )}
 
-      {/* Comment Area */}
+      {/* Expanded textarea */}
       {open && (
-        <div className="space-y-3 p-4 border rounded-xl bg-muted/20 shadow-sm transition-all animate-in fade-in duration-150">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <MessageSquarePlus className="h-4 w-4 text-primary" />
-              Comment 
-            </Label>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleToggle}
-              className="text-xs text-red-500 hover:text-red-600 hover:bg-red-100/40 rounded-md px-2"
-            >
-              Cancel
-            </Button>
-          </div>
-
+        <div className="space-y-1 animate-in fade-in duration-150">
           <Textarea
+            ref={textareaRef}
             value={comment}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Write something..."
-            className="h-28 resize-none text-sm bg-white rounded-lg border focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+            onBlur={handleBlur}
+            placeholder="Write a comment…"
+            className="
+              text-sm
+              min-h-[70px]
+              resize-none
+              border border-gray-300 rounded-md
+              focus:border-primary
+              focus:ring-primary/30 focus:ring-1
+            "
           />
 
-          {/* Optional: Save button for explicit UX */}
-          {/* <div className="flex justify-end">
-            <Button size="sm" className="px-4">
-              Save
-            </Button>
-          </div> */}
+          {/* Show cancel only when comment is empty */}
+          {!comment && (
+            <button
+              onClick={() => setOpen(false)}
+              className="text-xs text-gray-500 hover:underline"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       )}
     </div>

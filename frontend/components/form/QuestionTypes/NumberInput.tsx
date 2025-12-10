@@ -1,8 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
 import FileUpload from "./FileUpload";
 
@@ -15,32 +13,58 @@ interface NumberInputProps {
   comment?: string;
   files?: File[];
   fileUrls?: { name: string; url: string }[];
+  required?: boolean;
 }
 
-export default function NumberInput({ question, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: NumberInputProps) {
+export default function NumberInput({
+  question,
+  onChange,
+  onCommentChange,
+  onFilesChange,
+  value,
+  comment,
+  files,
+  fileUrls,
+  required,
+}: NumberInputProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <h2 className="text-xl font-medium tracking-tight">{question}</h2>
-      
-      <div className="space-y-2">
-        <Label htmlFor="number-input">Enter a number</Label>
+    <div className="space-y-4">
+      {/* Question */}
+      <p className="text-sm font-light text-gray-800 leading-snug">
+        {question}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </p>
+
+      {/* Number Input */}
+      <div className="max-w-xs">
         <Input
           id="number-input"
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="text-lg"
+          placeholder="Enter a number"
+          className="
+            text-sm font-light
+            bg-transparent
+            border-0 border-b border-gray-300
+            rounded-none
+            px-1 pb-1
+            focus-visible:ring-0 
+            focus:border-primary
+            transition
+          "
         />
       </div>
-      <div className="space-y-2">
+
+      {/* Comment & Upload */}
+      <div className="space-y-3 pt-1">
         <CommentBox onChange={onCommentChange} comment={comment} />
-        <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
+        <FileUpload
+          onFilesChange={onFilesChange}
+          files={files || []}
+          fileUrls={fileUrls}
+        />
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -5,7 +5,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
 import FileUpload from "./FileUpload";
 
@@ -19,20 +18,19 @@ interface DropdownProps {
   comment?: string;
   files?: File[];
   fileUrls?: { name: string; url: string }[];
+  required?: boolean;
 }
 
-export default function Dropdown({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: DropdownProps) {
+export default function Dropdown({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls, required }: DropdownProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <h2 className="text-xl font-medium tracking-tight">{question}</h2>
+    <div className="space-y-4">
+      <p className="text-base font-light">
+        {question}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </p>
       
       <Select onValueChange={onChange} defaultValue={value}>
-        <SelectTrigger className="w-full text-lg">
+        <SelectTrigger className="w-full md:w-1/2">
           <SelectValue placeholder="Select an option" />
         </SelectTrigger>
         <SelectContent>
@@ -44,10 +42,10 @@ export default function Dropdown({ question, options, onChange, onCommentChange,
         </SelectContent>
       </Select>
 
-      <div className="space-y-2">
+      <div className="pt-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
         <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
-    </motion.div>
+    </div>
   );
 }

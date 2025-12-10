@@ -1,8 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
 import FileUpload from "./FileUpload";
 
@@ -15,31 +13,31 @@ interface ShortAnswerProps {
   comment?: string;
   files?: File[];
   fileUrls?: { name: string; url: string }[];
+  required?: boolean;
 }
 
-export default function ShortAnswer({ question, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: ShortAnswerProps) {
+export default function ShortAnswer({ question, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls, required }: ShortAnswerProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <h2 className="text-xl font-medium tracking-tight">{question}</h2>
+    <div className="space-y-4">
+      <p className="text-base font-light">
+        {question}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </p>
       
-      <div className="space-y-2">
-        <Label htmlFor="short-answer">Your answer</Label>
+      <div className="max-w-md">
         <Input
           id="short-answer"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="text-lg"
+          placeholder="Your answer"
+          className="text-base font-light border-0 border-b-2 rounded-none px-1 focus-visible:ring-0 focus:border-primary"
         />
       </div>
-      <div className="space-y-2">
+
+      <div className="pt-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
         <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
-    </motion.div>
+    </div>
   );
 }

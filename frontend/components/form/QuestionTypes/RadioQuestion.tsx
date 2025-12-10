@@ -2,7 +2,6 @@
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { motion } from "@/components/ui/motion";
 import CommentBox from "./CommentBox";
 import FileUpload from "./FileUpload";
 
@@ -16,37 +15,36 @@ interface RadioQuestionProps {
   comment?: string;
   files?: File[];
   fileUrls?: { name: string; url: string }[];
+  required?: boolean;
 }
 
-export default function RadioQuestion({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls }: RadioQuestionProps) {
+export default function RadioQuestion({ question, options, onChange, onCommentChange, onFilesChange, value, comment, files, fileUrls, required }: RadioQuestionProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <h2 className="text-xl font-medium tracking-tight">{question}</h2>
+    <div className="space-y-4">
+      <p className="text-base font-light">
+        {question}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </p>
         <RadioGroup 
         value={value} 
         onValueChange={onChange}
-        className="space-y-2"
+        className="space-y-1"
       >
         {options.map((option) => (
           <div 
             key={option} 
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-secondary cursor-pointer transition-colors"
+            className="flex items-center space-x-3"
             onClick={() => onChange(option)}
           >
-            <RadioGroupItem value={option} id={option} />
-            <Label htmlFor={option} className="text-base cursor-pointer flex-1">{option}</Label>
+            <RadioGroupItem value={option} id={`${question}-${option}`} />
+            <Label htmlFor={`${question}-${option}`} className="text-base font-light cursor-pointer flex-1">{option}</Label>
           </div>
         ))}
       </RadioGroup>
-      <div className="space-y-2">
+      <div className="pt-2">
         <CommentBox onChange={onCommentChange} comment={comment} />
         <FileUpload onFilesChange={onFilesChange} files={files || []} fileUrls={fileUrls} />
       </div>
-    </motion.div>
+    </div>
   );
 }

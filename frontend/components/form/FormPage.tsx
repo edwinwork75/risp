@@ -15,7 +15,7 @@ import Dropdown from "@/components/form/QuestionTypes/Dropdown";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AssessmentState {
   answers: Record<number, { value: string; comment?: string }>;
@@ -300,94 +300,84 @@ export default function FormPage() {
       sections[sectionName].push(q);
     });
 
+    let globalQuestionIndex = 0; // Initialize global index
+
     return Object.entries(sections).map(([sectionName, sectionQuestions]) => (
-      <Card key={sectionName} className="mb-8">
-        <CardHeader>
-          <CardTitle>{sectionName}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {sectionQuestions.map((question, index) => (
-            <div key={question.id} className="mb-6 pb-6 border-b last:border-b-0">
-              {renderQuestion(question, index)}
+        <div key={sectionName} className="space-y-6">
+          {sectionName !== "General" && (
+            <div className="p-6 bg-white rounded-lg border-t-8 border-primary shadow-sm">
+                <h2 className="text-3xl font-semibold text-gray-800">{sectionName}</h2>
+                {/* Optional: Add section description here */}
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          )}
+          {sectionQuestions.map((question) => {
+            globalQuestionIndex++; // Increment for each question
+            return (
+              <Card key={question.id} className="overflow-hidden shadow-sm">
+                <CardContent className="p-6">
+                  {renderQuestion(question, globalQuestionIndex)} {/* Pass the index */}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
     ));
   };
 
-  const renderQuestion = (question: any, index: number) => {
+  const renderQuestion = (question: any, index: number) => { // Add index parameter
     const answer = answers[question.id];
     const questionFiles = files[question.id];
     const questionFileUrls = fileObjectUrls[question.id];
+    const isRequired = !question.optional;
     
+    const commonProps = {
+        question: `${index}. ${question.text}`, // Prepend the index
+        value: answer?.value,
+        comment: answer?.comment,
+        files: questionFiles,
+        fileUrls: questionFileUrls,
+        onCommentChange: (comment: string) => handleCommentChange(question.id, comment),
+        onFilesChange: (files: File[]) => handleFilesChange(question.id, files),
+        required: isRequired,
+    };
+
     switch (question.type) {
       case "multiple-choice":
         return (
           <MultipleChoice
-            question={`${index + 1}. ${question.text}`}
+            {...commonProps}
             options={question.options || []}
             onChange={(val) => handleAnswer(question.id, val)}
-            onCommentChange={(comment) => handleCommentChange(question.id, comment)}
-            onFilesChange={(files) => handleFilesChange(question.id, files)}
-            value={answer?.value}
-            comment={answer?.comment}
-            files={questionFiles}
-            fileUrls={questionFileUrls}
           />
         );
       case "number":
         return (
           <NumberInput
-            question={`${index + 1}. ${question.text}`}
+            {...commonProps}
             onChange={(val) => handleAnswer(question.id, val)}
-            onCommentChange={(comment) => handleCommentChange(question.id, comment)}
-            onFilesChange={(files) => handleFilesChange(question.id, files)}
-            value={answer?.value}
-            comment={answer?.comment}
-            files={questionFiles}
-            fileUrls={questionFileUrls}
           />
         );
       case "short-answer":
         return (
           <ShortAnswer
-            question={`${index + 1}. ${question.text}`}
+            {...commonProps}
             onChange={(val) => handleAnswer(question.id, val)}
-            onCommentChange={(comment) => handleCommentChange(question.id, comment)}
-            onFilesChange={(files) => handleFilesChange(question.id, files)}
-            value={answer?.value}
-            comment={answer?.comment}
-            files={questionFiles}
-            fileUrls={questionFileUrls}
           />
         );
       case "radio":
         return (
           <RadioQuestion
-            question={`${index + 1}. ${question.text}`}
+            {...commonProps}
             options={question.options || []}
             onChange={(val) => handleAnswer(question.id, val)}
-            onCommentChange={(comment) => handleCommentChange(question.id, comment)}
-            onFilesChange={(files) => handleFilesChange(question.id, files)}
-            value={answer?.value}
-            comment={answer?.comment}
-            files={questionFiles}
-            fileUrls={questionFileUrls}
           />
         );
       case "dropdown":
         return (
           <Dropdown
-            question={`${index + 1}. ${question.text}`}
+            {...commonProps}
             options={question.options || []}
             onChange={(val) => handleAnswer(question.id, val)}
-            onCommentChange={(comment) => handleCommentChange(question.id, comment)}
-            onFilesChange={(files) => handleFilesChange(question.id, files)}
-            value={answer?.value}
-            comment={answer?.comment}
-            files={questionFiles}
-            fileUrls={questionFileUrls}
           />
         );
       default:
@@ -396,7 +386,7 @@ export default function FormPage() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-background">
       <FormHeader showProgress={false} />
 
       <main className="flex-1 flex flex-col">
@@ -407,7 +397,9 @@ export default function FormPage() {
             </div>
           ) : (
             <>
-              {renderQuestionsBySection()}
+              <div className="space-y-8">
+                {renderQuestionsBySection()}
+              </div>
               <div className="mt-8 flex justify-end items-center">
                 <Button
                   onClick={() => setShowSubmitConfirmation(true)}
