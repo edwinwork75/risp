@@ -18,10 +18,16 @@ interface DualResponseDateProps {
   question: string;
   onChange: (value: { main_contractor?: DualResponse; sub_contractor?: DualResponse }) => void;
   value?: { main_contractor?: DualResponse; sub_contractor?: DualResponse };
-  fileUrls?: {
-    main_contractor?: { name: string; url: string }[];
-    sub_contractor?: { name: string; url: string }[];
+  files?: {
+    main: File[];
+    sub: File[];
   };
+  fileUrls?: {
+    main?: { name: string; url: string }[];
+    sub?: { name: string; url: string }[];
+  };
+  onMainFilesChange?: (files: File[]) => void;
+  onSubFilesChange?: (files: File[]) => void;
   required?: boolean;
 }
 
@@ -29,7 +35,10 @@ export default function DualResponseDate({
   question,
   onChange,
   value = {},
+  files = { main: [], sub: [] },
   fileUrls,
+  onMainFilesChange,
+  onSubFilesChange,
   required,
 }: DualResponseDateProps) {
   const handlePartyChange = (party: 'main_contractor' | 'sub_contractor', field: keyof DualResponse, fieldValue: any) => {
@@ -75,15 +84,15 @@ export default function DualResponseDate({
               placeholder="Select date"
             />
             <div className="pt-2">
-                <CommentBox 
-                    onChange={(comment) => handlePartyChange('main_contractor', 'comment', comment)} 
-                    comment={value.main_contractor?.comment} 
-                />
-                <FileUpload 
-                    onFilesChange={(files) => handlePartyChange('main_contractor', 'files', files)} 
-                    files={value.main_contractor?.files || []} 
-                    fileUrls={fileUrls?.main_contractor} 
-                />
+              <CommentBox
+                onChange={(comment) => handlePartyChange('main_contractor', 'comment', comment)}
+                comment={value.main_contractor?.comment}
+              />
+              <FileUpload
+                onFilesChange={(files) => onMainFilesChange?.(files)}
+                files={files.main}
+                fileUrls={fileUrls?.main}
+              />
             </div>
           </div>
         </TabsContent>
@@ -111,15 +120,15 @@ export default function DualResponseDate({
               placeholder="Select date"
             />
             <div className="pt-2">
-                <CommentBox 
-                    onChange={(comment) => handlePartyChange('sub_contractor', 'comment', comment)} 
-                    comment={value.sub_contractor?.comment} 
-                />
-                <FileUpload 
-                    onFilesChange={(files) => handlePartyChange('sub_contractor', 'files', files)} 
-                    files={value.sub_contractor?.files || []} 
-                    fileUrls={fileUrls?.sub_contractor} 
-                />
+              <CommentBox
+                onChange={(comment) => handlePartyChange('sub_contractor', 'comment', comment)}
+                comment={value.sub_contractor?.comment}
+              />
+              <FileUpload
+                onFilesChange={(files) => onSubFilesChange?.(files)}
+                files={files.sub}
+                fileUrls={fileUrls?.sub}
+              />
             </div>
           </div>
         </TabsContent>

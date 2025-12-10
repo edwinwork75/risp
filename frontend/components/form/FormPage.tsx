@@ -36,8 +36,8 @@ interface ResponseItem {
 
 export default function FormPage() {
   const [answers, setAnswers] = useState<Record<number, { value: string | object; comment?: string }>>({});
-  const [files, setFiles] = useState<Record<number, File[]>>({});
-  const [fileObjectUrls, setFileObjectUrls] = useState<Record<number, {name: string, url: string}[]>>({});
+  const [files, setFiles] = useState<Record<string | number, File[]>>({});
+  const [fileObjectUrls, setFileObjectUrls] = useState<Record<string | number, { name: string, url: string }[]>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false);
@@ -137,7 +137,7 @@ export default function FormPage() {
       try {
         const { wellbeingQuestions } = await import(`@/lib/[slug]/${slug}`);
         setQuestions(wellbeingQuestions);
-        
+
         const saved = loadFromLocalStorage();
         if (saved && Object.keys(saved.answers).length > 0) {
           setSavedState(saved);
@@ -154,23 +154,23 @@ export default function FormPage() {
   }, [slug]);
 
   useEffect(() => {
-    const newUrls: Record<number, {name: string, url: string}[]> = {};
+    const newUrls: Record<string | number, { name: string, url: string }[]> = {};
     for (const questionId in files) {
-        if (files[questionId]) {
-            newUrls[questionId] = files[questionId].map(file => ({
-                name: file.name,
-                url: URL.createObjectURL(file)
-            }));
-        }
+      if (files[questionId]) {
+        newUrls[questionId] = files[questionId].map(file => ({
+          name: file.name,
+          url: URL.createObjectURL(file)
+        }));
+      }
     }
     setFileObjectUrls(newUrls);
 
     return () => {
-        for (const questionId in newUrls) {
-            if (newUrls[questionId]) {
-                newUrls[questionId].forEach(file => URL.revokeObjectURL(file.url));
-            }
+      for (const questionId in newUrls) {
+        if (newUrls[questionId]) {
+          newUrls[questionId].forEach(file => URL.revokeObjectURL(file.url));
         }
+      }
     };
   }, [files]);
 
@@ -190,27 +190,28 @@ export default function FormPage() {
       }
       return !answerData || !answerData.value || (typeof answerData.value === 'string' && answerData.value.trim() === "");
     });
-  
+
     if (missingRequired) {
       alert("Please answer all required questions before submitting.");
       return;
     }
-  
+
     setIsUploading(true);
 
     try {
-      const uploadedFileUrls: Record<number, string[]> = {};
-      for (const questionId in files) {
-        const fileList = files[questionId];
+      const uploadedFileUrls: Record<string | number, string[]> = {};
+      for (const key in files) {
+        const fileList = files[key];
         if (fileList && fileList.length > 0) {
-          uploadedFileUrls[parseInt(questionId)] = [];
+          uploadedFileUrls[key] = [];
           for (const file of fileList) {
             const formData = new FormData();
             formData.append("file", file);
+            // This is an assumed endpoint. In a real project, replace with the actual one.
             const response = await mcApiService.post(`/files/upload`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' }
             });
-            uploadedFileUrls[parseInt(questionId)].push(response.data.url);
+            uploadedFileUrls[key].push(response.data.url);
           }
         }
       }
@@ -220,21 +221,35 @@ export default function FormPage() {
 
       const responses: ResponseItem[] = Object.entries(answers).map(([questionId, answerData]) => {
         const question = questions.find(q => q.id === parseInt(questionId));
-        const answer = answerData.value;
+        let answer = answerData.value;
         const comment = answerData.comment;
         const attachments = uploadedFileUrls[parseInt(questionId)];
 
-        let score = 0;
-        if (question.type !== 'dual-response-date' && typeof answer === 'string') {
-            const optionIndex = question?.options?.indexOf(answer) ?? -1;
-            if (optionIndex >= 0) {
-                score = question?.scoreType === "S" 
-                    ? optionIndex + 1 
-                    : 5 - optionIndex;
-                finalScore += score;
-            }
+        if (question?.type === 'dual-response-date' && typeof answer === 'object' && answer !== null) {
+          const answerCopy = JSON.parse(JSON.stringify(answer));
+          const mainFiles = uploadedFileUrls[`${questionId}_main`];
+          const subFiles = uploadedFileUrls[`${questionId}_sub`];
+
+          if (mainFiles && answerCopy.main_contractor) {
+            answerCopy.main_contractor.files = mainFiles;
+          }
+          if (subFiles && answerCopy.sub_contractor) {
+            answerCopy.sub_contractor.files = subFiles;
+          }
+          answer = answerCopy;
         }
-        
+
+        let score = 0;
+        if (question?.type !== 'dual-response-date' && typeof answer === 'string') {
+          const optionIndex = question?.options?.indexOf(answer) ?? -1;
+          if (optionIndex >= 0) {
+            score = question?.scoreType === "S"
+              ? optionIndex + 1
+              : 5 - optionIndex;
+            finalScore += score;
+          }
+        }
+
         const responsePayload: any = { value: answer };
         if (comment) responsePayload.comment = comment;
         if (attachments && attachments.length > 0) responsePayload.attachments = attachments;
@@ -305,7 +320,7 @@ export default function FormPage() {
     }));
   };
 
-  const handleFilesChange = (questionId: number, files: File[]) => {
+  const handleFilesChange = (questionId: string | number, files: File[]) => {
     setFiles(prev => ({
       ...prev,
       [questionId]: files
@@ -351,7 +366,7 @@ export default function FormPage() {
             sectionName === 'Project Information'
               ? `${globalQuestionIndex + index + 1}.`
               : `${String.fromCharCode(97 + index)}.`;
-          
+
           return (
             <Card key={question.id} className="overflow-hidden shadow-sm">
               <CardContent className="p-6">
@@ -369,14 +384,14 @@ export default function FormPage() {
     const questionFiles = files[question.id];
     const questionFileUrls = fileObjectUrls[question.id];
     const isRequired = !question.optional;
-    
+
     const commonProps: any = {
-        question: `${prefix} ${question.text}`,
-        value: answer?.value,
-        files: questionFiles,
-        fileUrls: questionFileUrls,
-        onFilesChange: (files: File[]) => handleFilesChange(question.id, files),
-        required: isRequired,
+      question: `${prefix} ${question.text}`,
+      value: answer?.value,
+      files: questionFiles,
+      fileUrls: questionFileUrls,
+      onFilesChange: (files: File[]) => handleFilesChange(question.id, files),
+      required: isRequired,
     };
 
     switch (question.type) {
@@ -395,12 +410,21 @@ export default function FormPage() {
       case "check-method":
         return <CheckMethod {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
       case "dual-response-date":
-        return <DualResponseDate {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
+        return (
+          <DualResponseDate
+            {...commonProps}
+            files={{ main: files[`${question.id}_main`] || [], sub: files[`${question.id}_sub`] || [] }}
+            fileUrls={{ main: fileObjectUrls[`${question.id}_main`] || [], sub: fileObjectUrls[`${question.id}_sub`] || [] }}
+            onMainFilesChange={(files: File[]) => handleFilesChange(`${question.id}_main`, files)}
+            onSubFilesChange={(files: File[]) => handleFilesChange(`${question.id}_sub`, files)}
+            onChange={(val) => handleAnswer(question.id, val)}
+          />
+        );
       default:
         return null;
     }
   };
-  
+
   const progress = sections.length > 0 ? ((currentPage + 1) / sections.length) * 100 : 0;
 
   return (
