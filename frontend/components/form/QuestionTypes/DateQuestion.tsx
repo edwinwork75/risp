@@ -1,9 +1,9 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import FileUpload from "./FileUpload";
 
-interface ShortAnswerProps {
+interface DateQuestionProps {
   question: string;
   onChange: (value: string) => void;
   onFilesChange: (files: File[]) => void;
@@ -13,7 +13,15 @@ interface ShortAnswerProps {
   required?: boolean;
 }
 
-export default function ShortAnswer({ question, onChange, onFilesChange, value, files, fileUrls, required }: ShortAnswerProps) {
+export default function DateQuestion({
+  question,
+  onChange,
+  onFilesChange,
+  value,
+  files,
+  fileUrls,
+  required,
+}: DateQuestionProps) {
   return (
     <div className="space-y-4">
       <p className="text-base font-light">
@@ -22,12 +30,9 @@ export default function ShortAnswer({ question, onChange, onFilesChange, value, 
       </p>
       
       <div className="max-w-md">
-        <Input
-          id="short-answer"
+        <DatePicker
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Your answer"
-          className="text-base font-light border-0 border-b-2 rounded-none px-1 focus-visible:ring-0 focus:border-primary"
+          onChange={onChange}
         />
       </div>
 

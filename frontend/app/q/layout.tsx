@@ -5,8 +5,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Nalla Health',
-  description: 'Nalla Health Forms',
+  title: 'RISP',
+  description: 'Risp Forms',
 };
 
 export default function QLayout({

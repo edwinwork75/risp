@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, ArrowLeft, ArrowRight } from "lucide-react";
 import FormHeader from "@/components/form/FormHeader";
 import IntroPage from "@/components/form/IntroPage";
 import FormFooter from "@/components/form/FormFooter";
@@ -12,13 +12,17 @@ import NumberInput from "@/components/form/QuestionTypes/NumberInput";
 import ShortAnswer from "@/components/form/QuestionTypes/ShortAnswer";
 import RadioQuestion from "@/components/form/QuestionTypes/RadioQuestion";
 import Dropdown from "@/components/form/QuestionTypes/Dropdown";
+import DateQuestion from "@/components/form/QuestionTypes/DateQuestion";
+import CheckMethod from "@/components/form/QuestionTypes/CheckMethod";
+import DualResponseDate from "@/components/form/QuestionTypes/DualResponseDate";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface AssessmentState {
-  answers: Record<number, { value: string; comment?: string }>;
+  answers: Record<number, { value: string | object; comment?: string }>;
   showIntro: boolean;
   timestamp: number;
 }
@@ -31,7 +35,7 @@ interface ResponseItem {
 }
 
 export default function FormPage() {
-  const [answers, setAnswers] = useState<Record<number, { value: string; comment?: string }>>({});
+  const [answers, setAnswers] = useState<Record<number, { value: string | object; comment?: string }>>({});
   const [files, setFiles] = useState<Record<number, File[]>>({});
   const [fileObjectUrls, setFileObjectUrls] = useState<Record<number, {name: string, url: string}[]>>({});
   const [isUploading, setIsUploading] = useState(false);
@@ -40,6 +44,8 @@ export default function FormPage() {
   const [showIntro, setShowIntro] = useState(true);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [savedState, setSavedState] = useState<AssessmentState | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const topOfFormRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -50,6 +56,24 @@ export default function FormPage() {
   const slug = searchParams?.get("slug") || "";
 
   const getStorageKey = () => `assessment_${userId}_${assignmentId}_${slug}`;
+
+  const sections = useMemo(() => {
+    const sectionsMap: { [key: string]: any[] } = {};
+    questions.forEach(q => {
+      const sectionName = q.section || "General";
+      if (!sectionsMap[sectionName]) {
+        sectionsMap[sectionName] = [];
+      }
+      sectionsMap[sectionName].push(q);
+    });
+    return Object.entries(sectionsMap);
+  }, [questions]);
+
+  useEffect(() => {
+    if (!showIntro) {
+      topOfFormRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [currentPage, showIntro]);
 
   const saveToLocalStorage = (state: Partial<AssessmentState>) => {
     try {
@@ -160,14 +184,18 @@ export default function FormPage() {
     const missingRequired = questions.some(q => {
       if (q.optional) return false;
       const answerData = answers[q.id];
-      return !answerData || !answerData.value || answerData.value.trim() === "";
+      if (q.type === 'dual-response-date') {
+        const value = answerData?.value as { main_contractor?: { response: string }, sub_contractor?: { response: string } } | undefined;
+        return !value?.main_contractor?.response || !value?.sub_contractor?.response;
+      }
+      return !answerData || !answerData.value || (typeof answerData.value === 'string' && answerData.value.trim() === "");
     });
-
+  
     if (missingRequired) {
       alert("Please answer all required questions before submitting.");
       return;
     }
-
+  
     setIsUploading(true);
 
     try {
@@ -179,7 +207,6 @@ export default function FormPage() {
           for (const file of fileList) {
             const formData = new FormData();
             formData.append("file", file);
-            // This is an assumed endpoint. In a real project, replace with the actual one.
             const response = await mcApiService.post(`/files/upload`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -197,16 +224,17 @@ export default function FormPage() {
         const comment = answerData.comment;
         const attachments = uploadedFileUrls[parseInt(questionId)];
 
-        const optionIndex = question?.options?.indexOf(answer) ?? -1;
         let score = 0;
-
-        if (optionIndex >= 0) {
-          score = question?.scoreType === "S" 
-            ? optionIndex + 1 
-            : 5 - optionIndex;
-          finalScore += score;
+        if (question.type !== 'dual-response-date' && typeof answer === 'string') {
+            const optionIndex = question?.options?.indexOf(answer) ?? -1;
+            if (optionIndex >= 0) {
+                score = question?.scoreType === "S" 
+                    ? optionIndex + 1 
+                    : 5 - optionIndex;
+                finalScore += score;
+            }
         }
-
+        
         const responsePayload: any = { value: answer };
         if (comment) responsePayload.comment = comment;
         if (attachments && attachments.length > 0) responsePayload.attachments = attachments;
@@ -239,8 +267,6 @@ export default function FormPage() {
         section: null
       });
 
-      console.log("Responses being sent:", responses);
-
       await mcApiService.patch(
         `/organisations/${organisationId}/assessment-assignments/${assignmentId}/response`,
         {
@@ -265,7 +291,7 @@ export default function FormPage() {
     }
   };
 
-  const handleAnswer = (questionId: number, value: string) => {
+  const handleAnswer = (questionId: number, value: string | object) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: { ...prev[questionId], value }
@@ -289,105 +315,97 @@ export default function FormPage() {
   const handleStartAssessment = () => {
     setShowIntro(false);
   };
-  
-  const renderQuestionsBySection = () => {
-    const sections: { [key: string]: any[] } = {};
-    questions.forEach(q => {
-      const sectionName = q.section || "General";
-      if (!sections[sectionName]) {
-        sections[sectionName] = [];
-      }
-      sections[sectionName].push(q);
-    });
 
-    let globalQuestionIndex = 0; // Initialize global index
-
-    return Object.entries(sections).map(([sectionName, sectionQuestions]) => (
-        <div key={sectionName} className="space-y-6">
-          {sectionName !== "General" && (
-            <div className="p-6 bg-white rounded-lg border-t-8 border-primary shadow-sm">
-                <h2 className="text-3xl font-semibold text-gray-800">{sectionName}</h2>
-                {/* Optional: Add section description here */}
-            </div>
-          )}
-          {sectionQuestions.map((question) => {
-            globalQuestionIndex++; // Increment for each question
-            return (
-              <Card key={question.id} className="overflow-hidden shadow-sm">
-                <CardContent className="p-6">
-                  {renderQuestion(question, globalQuestionIndex)} {/* Pass the index */}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-    ));
+  const handleNextPage = () => {
+    if (currentPage < sections.length - 1) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
-  const renderQuestion = (question: any, index: number) => { // Add index parameter
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const renderCurrentSection = () => {
+    if (sections.length === 0) return null;
+
+    const [sectionName, sectionQuestions] = sections[currentPage];
+    let globalQuestionIndex = 0;
+    for (let i = 0; i < currentPage; i++) {
+      if (sections[i][0] === 'Project Information') {
+        globalQuestionIndex += sections[i][1].length;
+      }
+    }
+
+    return (
+      <div className="space-y-6">
+        {sectionName !== "General" && (
+          <div className="p-6 bg-white rounded-lg border-t-8 border-primary shadow-sm">
+            <h2 className="text-3xl font-semibold text-gray-800">{sectionName}</h2>
+          </div>
+        )}
+        {sectionQuestions.map((question, index) => {
+          const questionPrefix =
+            sectionName === 'Project Information'
+              ? `${globalQuestionIndex + index + 1}.`
+              : `${String.fromCharCode(97 + index)}.`;
+          
+          return (
+            <Card key={question.id} className="overflow-hidden shadow-sm">
+              <CardContent className="p-6">
+                {renderQuestion(question, questionPrefix)}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderQuestion = (question: any, prefix: string) => {
     const answer = answers[question.id];
     const questionFiles = files[question.id];
     const questionFileUrls = fileObjectUrls[question.id];
     const isRequired = !question.optional;
     
-    const commonProps = {
-        question: `${index}. ${question.text}`, // Prepend the index
+    const commonProps: any = {
+        question: `${prefix} ${question.text}`,
         value: answer?.value,
-        comment: answer?.comment,
         files: questionFiles,
         fileUrls: questionFileUrls,
-        onCommentChange: (comment: string) => handleCommentChange(question.id, comment),
         onFilesChange: (files: File[]) => handleFilesChange(question.id, files),
         required: isRequired,
     };
 
     switch (question.type) {
       case "multiple-choice":
-        return (
-          <MultipleChoice
-            {...commonProps}
-            options={question.options || []}
-            onChange={(val) => handleAnswer(question.id, val)}
-          />
-        );
+        return <MultipleChoice {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
       case "number":
-        return (
-          <NumberInput
-            {...commonProps}
-            onChange={(val) => handleAnswer(question.id, val)}
-          />
-        );
+        return <NumberInput {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
       case "short-answer":
-        return (
-          <ShortAnswer
-            {...commonProps}
-            onChange={(val) => handleAnswer(question.id, val)}
-          />
-        );
+        return <ShortAnswer {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
       case "radio":
-        return (
-          <RadioQuestion
-            {...commonProps}
-            options={question.options || []}
-            onChange={(val) => handleAnswer(question.id, val)}
-          />
-        );
+        return <RadioQuestion {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
       case "dropdown":
-        return (
-          <Dropdown
-            {...commonProps}
-            options={question.options || []}
-            onChange={(val) => handleAnswer(question.id, val)}
-          />
-        );
+        return <Dropdown {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
+      case "date":
+        return <DateQuestion {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
+      case "check-method":
+        return <CheckMethod {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
+      case "dual-response-date":
+        return <DualResponseDate {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
       default:
         return null;
     }
   };
   
+  const progress = sections.length > 0 ? ((currentPage + 1) / sections.length) * 100 : 0;
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-background">
-      <FormHeader showProgress={false} />
+      <FormHeader showProgress={!showIntro} progress={progress} />
 
       <main className="flex-1 flex flex-col">
         <div className="container max-w-4xl mx-auto px-4 py-8 flex-1 flex flex-col">
@@ -397,18 +415,32 @@ export default function FormPage() {
             </div>
           ) : (
             <>
-              <div className="space-y-8">
-                {renderQuestionsBySection()}
+              <div ref={topOfFormRef} className="space-y-8">
+                {renderCurrentSection()}
               </div>
-              <div className="mt-8 flex justify-end items-center">
-                <Button
-                  onClick={() => setShowSubmitConfirmation(true)}
-                  className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-                  disabled={isUploading}
-                >
-                  {isUploading ? "Submitting..." : "Submit"}
-                  {!isUploading && <Send className="h-4 w-4" />}
-                </Button>
+              <div className="mt-8 flex justify-between items-center">
+                {currentPage > 0 && (
+                  <Button onClick={handlePrevPage} variant="outline">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                )}
+                <div />
+                {currentPage < sections.length - 1 ? (
+                  <Button onClick={handleNextPage}>
+                    Next
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => setShowSubmitConfirmation(true)}
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+                    disabled={isUploading}
+                  >
+                    {isUploading ? "Submitting..." : "Submit"}
+                    {!isUploading && <Send className="h-4 w-4" />}
+                  </Button>
+                )}
               </div>
             </>
           )}

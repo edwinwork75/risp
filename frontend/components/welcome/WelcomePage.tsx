@@ -91,13 +91,13 @@ export default function WelcomePage({ isAuthenticated, isSuperAdmin }: WelcomePa
       <div className="absolute top-10 left-10">
         <div className="flex items-center gap-2">
           <Heart className="h-8 w-8 text-primary" />
-          <span className="text-xl font-semibold">Nalla Health</span>
+          <span className="text-xl font-semibold">RISP</span>
         </div>
       </div>
       
       <Card className="w-full max-w-md shadow-lg border-border/50 animate-fade-in duration-500">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">Welcome to Nalla Health</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">RISP</CardTitle>
           <CardDescription>
             Enter your access code and key to continue to the form
           </CardDescription>
