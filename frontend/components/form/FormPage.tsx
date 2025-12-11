@@ -50,6 +50,7 @@ export default function FormPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [sectionsOpen, setSectionsOpen] = useState(false);
   const topOfFormRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -87,9 +88,10 @@ export default function FormPage() {
     setCurrentPage(page);
   };
 
+  // Scroll to top on page change
   useEffect(() => {
     if (!showIntro) {
-      topOfFormRef.current?.scrollIntoView({ behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentPage, showIntro]);
 
@@ -478,15 +480,16 @@ export default function FormPage() {
         viewMode={effectiveViewMode}
         onViewModeChange={setViewMode}
         onHistoryClick={() => setHistoryOpen(true)}
+        onMenuClick={!showIntro ? () => setSectionsOpen(true) : undefined}
       />
 
-      {!showIntro && (
-        <FormSidebar
-          sections={sidebarSections}
-          currentPage={currentPage}
-          onSectionClick={handleSectionClick}
-        />
-      )}
+      <FormSidebar
+        sections={sidebarSections}
+        currentPage={currentPage}
+        onSectionClick={handleSectionClick}
+        open={sectionsOpen}
+        onOpenChange={setSectionsOpen}
+      />
 
       {/* Controlled History Sidebar */}
       <HistorySidebar open={historyOpen} onOpenChange={setHistoryOpen} />

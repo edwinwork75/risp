@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardCheck, Home, Activity, History, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { ClipboardCheck, Home, Activity, History, LayoutGrid, Table as TableIcon, Menu, PanelLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ interface FormHeaderProps {
   viewMode?: 'card' | 'table';
   onViewModeChange?: (mode: 'card' | 'table') => void;
   onHistoryClick?: () => void;
+  onMenuClick?: () => void;
 }
 
 export default function FormHeader({
@@ -22,28 +23,45 @@ export default function FormHeader({
   showViewToggle = false,
   viewMode = 'card',
   onViewModeChange,
-  onHistoryClick
+  onHistoryClick,
+  onMenuClick
 }: FormHeaderProps) {
   const router = useRouter();
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm transition-all duration-300">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-2 md:gap-4">
-        {/* Logo and Title */}
-        <div
-          className="flex items-center gap-2 cursor-pointer group shrink-0"
-          onClick={() => router.push("/")}
-        >
-          <div className="bg-primary/10 p-2 rounded-xl border border-primary/20 group-hover:bg-primary/20 group-hover:scale-105 transition-all duration-300 ease-out shadow-sm">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground leading-none group-hover:text-primary transition-colors duration-300">
-              RISP
-            </h1>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
-              Inspection
-            </p>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Sections Menu Trigger */}
+          {onMenuClick && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMenuClick}
+              className="text-muted-foreground hover:text-foreground shrink-0"
+              aria-label="Open Sections"
+            >
+              <PanelLeft className="h-5 w-5" />
+            </Button>
+          )}
+
+          {/* Logo and Title */}
+          <div
+            className="flex items-center gap-2 cursor-pointer group shrink-0"
+            onClick={() => router.push("/")}
+          >
+            <div className="bg-primary/10 p-2 rounded-xl border border-primary/20 group-hover:bg-primary/20 group-hover:scale-105 transition-all duration-300 ease-out shadow-sm">
+              <ClipboardCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground leading-none group-hover:text-primary transition-colors duration-300">
+                RISP
+              </h1>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
+                Inspection
+              </p>
+            </div>
           </div>
         </div>
 
@@ -103,8 +121,6 @@ export default function FormHeader({
             <History className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline font-medium">History</span>
           </Button>
-
-
         </div>
       </div>
 

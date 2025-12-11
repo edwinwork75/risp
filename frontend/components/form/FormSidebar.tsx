@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { PanelLeft } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface Section {
   name: string;
@@ -15,37 +13,30 @@ interface FormSidebarProps {
   sections: Section[];
   currentPage: number;
   onSectionClick: (page: number) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export default function FormSidebar({
   sections,
   currentPage,
   onSectionClick,
+  open,
+  onOpenChange
 }: FormSidebarProps) {
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleSectionClick = (index: number) => {
     onSectionClick(index);
-    setIsOpen(false); // Close sidebar on section click
+    onOpenChange(false);
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          className="fixed top-32 left-4 z-40 rounded-md px-4 py-2 bg-white/80 dark:bg-black/80 backdrop-blur-sm shadow-lg border hover:bg-white dark:hover:bg-black"
-          aria-label="Open form sections"
-        >
-          <PanelLeft className="h-5 w-5 mr-0 sm:mr-2" />
-          <span className="hidden sm:inline">Sections</span>
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-[85vw] sm:w-80 pt-10">
-        <SheetHeader className="px-1">
+        <SheetHeader className="px-1 border-b pb-4 mb-4">
           <SheetTitle>Form Sections</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 h-[calc(100vh-8rem)] overflow-y-auto">
+        <ScrollArea className="h-[calc(100vh-8rem)] pr-4">
           <nav className="space-y-1">
             {sections.map((section, index) => (
               <button
@@ -67,7 +58,7 @@ export default function FormSidebar({
               </button>
             ))}
           </nav>
-        </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
