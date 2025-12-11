@@ -80,7 +80,6 @@ export default function FormPage() {
 
   const sidebarSections = useMemo(() => {
     return sections
-      .filter(([name]) => name !== "Signatures") // Filter out Signatures
       .map(([name, questions]) => ({
         name,
         questionCount: questions.length
@@ -539,21 +538,27 @@ export default function FormPage() {
                     </Button>
                   )}
                   <div />
-                  {currentPage < sections.length - 1 ? (
-                    <Button onClick={handleNextPage}>
-                      Next
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                  <div className="flex gap-2">
+                    <Button onClick={() => saveToLocalStorage({ answers, showIntro })} variant="outline">
+                      Save
+                      <Save className="h-4 w-4 ml-2" />
                     </Button>
-                  ) : (
-                    <Button
-                      onClick={() => setShowSubmitConfirmation(true)}
-                      className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-                      disabled={isUploading}
-                    >
-                      {isUploading ? "Submitting..." : "Submit"}
-                      {!isUploading && <Send className="h-4 w-4" />}
-                    </Button>
-                  )}
+                    {currentPage < sections.length - 1 ? (
+                      <Button onClick={handleNextPage}>
+                        Next
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => setShowSubmitConfirmation(true)}
+                        className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+                        disabled={isUploading}
+                      >
+                        {isUploading ? "Submitting..." : "Submit"}
+                        {!isUploading && <Send className="h-4 w-4" />}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </>
             )}

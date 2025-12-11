@@ -42,7 +42,7 @@ export function SidebarNav({
           <div className="flex justify-between items-center">
             <span>{section.name}</span>
             <span className="text-xs opacity-70">
-              {section.questionCount} Qs
+              ({section.questionCount})
             </span>
           </div>
         </button>
