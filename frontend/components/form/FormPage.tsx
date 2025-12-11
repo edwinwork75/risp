@@ -27,6 +27,8 @@ import DesktopSidebar from "@/components/form/DesktopSidebar";
 import { cn } from "@/lib/utils";
 import { Arrow } from "@radix-ui/react-popover";
 import { exportToExcel } from "@/lib/excelUtils";
+import { exportToPdf } from "@/lib/pdfUtils";
+import { format } from "date-fns";
 
 interface AssessmentState {
   answers: Record<number, { value: string | object; comment?: string }>;
@@ -386,6 +388,13 @@ export default function FormPage() {
     exportToExcel(questions, answers, `Assessment_${slug || 'export'}.xlsx`);
   };
 
+  const handleExportPdf = () => {
+    // wait for 100ms to ensure any state updates if needed, though mostly accessing refs/state directly
+    setTimeout(() => {
+      exportToPdf(questions, answers, `Assessment_${slug || 'export'}.pdf`);
+    }, 100);
+  };
+
   const renderCurrentSection = (globalIndex: number) => {
     if (sections.length === 0) return null;
 
@@ -504,6 +513,7 @@ export default function FormPage() {
         onViewModeChange={setViewMode}
         onMenuClick={!showIntro ? () => setSectionsOpen(true) : undefined}
         onExportClick={!showIntro ? handleExport : undefined}
+        onExportPdfClick={!showIntro ? handleExportPdf : undefined}
       />
 
       <FormSidebar

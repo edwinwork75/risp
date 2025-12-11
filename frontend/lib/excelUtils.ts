@@ -15,6 +15,16 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
     // K: COMMENTS
     // L-N: RE CHECK
 
+    // --- 1. SETUP COLUMNS & WIDTHS ---
+    // A: NO. 
+    // B: ITEMS 
+    // C: METHOD
+    // D: CRITERIA
+    // E-G: Subcon Check
+    // H: Subcon Comment (NEW)
+    // I-K: Maincon Check
+    // L: Maincon Comment (NEW)
+
     worksheet.columns = [
         { key: 'no', width: 5 },
         { key: 'item', width: 45 },
@@ -23,14 +33,16 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
         { key: 'sc_yes', width: 4 },
         { key: 'sc_no', width: 4 },
         { key: 'sc_date', width: 10 },
+        { key: 'sc_comment', width: 20 }, // New Subcon Comment
         { key: 'mc_yes', width: 4 },
         { key: 'mc_no', width: 4 },
         { key: 'mc_date', width: 10 },
-        { key: 'comments', width: 25 },
-        { key: 'rc_yes', width: 4 },
-        { key: 'rc_no', width: 4 },
-        { key: 'rc_date', width: 10 },
+        { key: 'mc_comment', width: 20 }, // New Maincon Comment
     ];
+
+    // Total columns now 12 (A to L).
+    // Previous Layout was 14 (A to N).
+    // We need to adjust all colspan/merges from N to L.
 
     // --- 2. EXTRACT PROJECT INFO ---
     const projectInfoAnswers = questions
@@ -43,126 +55,91 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
     const getPI = (key: string) => projectInfoAnswers[key] || '';
 
     // --- 3. DRAW HEADER SECTION ---
-
     // Row 1: Title
-    worksheet.mergeCells('A1:N1');
+    worksheet.mergeCells('A1:L1');
     const titleRow = worksheet.getRow(1);
     titleRow.getCell(1).value = 'INSPECTION CHECKLIST - STRUCTURAL STEELWORKS';
     titleRow.font = { bold: true, underline: true, size: 14 };
     titleRow.alignment = { horizontal: 'center', vertical: 'middle' };
     titleRow.height = 25;
 
-    // Row 2: RFI No (Top of box)
-    // A2-J2 merged (Empty spacer left)
-    // K2-N2 merged (RFI No)
-    worksheet.mergeCells('A2:J2');
-    worksheet.mergeCells('K2:N2');
+    // Row 2: RFI No
+    worksheet.mergeCells('A2:H2'); // Spacer
+    worksheet.mergeCells('I2:L2'); // RFI
     const rfiRow = worksheet.getRow(2);
-    rfiRow.getCell('K').value = `RFI No. :  ${getPI('RFI No.')}`;
-    rfiRow.getCell('K').alignment = { horizontal: 'left' }; // Usually text is left aligned in the box
+    rfiRow.getCell('I').value = `RFI No. :  ${getPI('RFI No.')}`;
+    rfiRow.getCell('I').alignment = { horizontal: 'left' };
     rfiRow.height = 20;
 
     // Row 3: Project | Date
-    worksheet.mergeCells('A3:J3'); // Project
-    worksheet.mergeCells('K3:N3'); // Date
+    worksheet.mergeCells('A3:H3');
+    worksheet.mergeCells('I3:L3');
     const row3 = worksheet.getRow(3);
     row3.getCell('A').value = `PROJECT :  ${getPI('PROJECT')}`;
-    row3.getCell('K').value = `DATE :  ${getPI('DATE')}`;
+    row3.getCell('I').value = `DATE :  ${getPI('DATE')}`;
     row3.height = 20;
 
-    // Row 4: Specialist | Location (Start of merge)
-    worksheet.mergeCells('A4:J4');
-    // Location spans 3 rows (Row 4, 5, 6)
-    worksheet.mergeCells('K4:N6');
+    // Row 4: Specialist | Location
+    worksheet.mergeCells('A4:H4');
+    worksheet.mergeCells('I4:L6'); // Location spans 3 rows
     const row4 = worksheet.getRow(4);
     row4.getCell('A').value = `STRUCTURAL STEEL SPECIALIST :  ${getPI('STRUCTURAL STEEL SPECIALIST')}`;
-    row4.getCell('K').value = `LOCATION / GRIDLINES : \n${getPI('LOCATION / GRIDLINES')}`;
-    row4.getCell('K').alignment = { vertical: 'top', wrapText: true };
+    row4.getCell('I').value = `LOCATION / GRIDLINES : \n${getPI('LOCATION / GRIDLINES')}`;
+    row4.getCell('I').alignment = { vertical: 'top', wrapText: true };
     row4.height = 20;
 
-    // Row 5: Steel Grade / Class
-    worksheet.mergeCells('A5:J5');
+    // Row 5: Steel Grade
+    worksheet.mergeCells('A5:H5');
     const row5 = worksheet.getRow(5);
     row5.getCell('A').value = `STEEL GRADE:  ${getPI('STEEL GRADE')}          CLASS OF STEEL :  ${getPI('CLASS OF STEEL (CHECK CONSULTANT DRAWING)')}`;
     row5.height = 20;
 
     // Row 6: Finishing Spec
-    worksheet.mergeCells('A6:J6');
+    worksheet.mergeCells('A6:H6');
     const row6 = worksheet.getRow(6);
-    // Highlight selected finishing if possible? For now uppercase text.
-    // We will construct a RichText value if we have time, but sticking to string for stability first.
-    const finishingVal = getPI('FINISHING SPECIFICATION');
-    // Let's try to simulate checking: 
     const finishingBase = "HOT DIPPED GALVANISED/PAINTING/VERMICULITE/INTUMESCENT";
-    // Simple approach: Just append selected value if it's not obvious
-    // But user wants structure "like this".
+    const finishingVal = getPI('FINISHING SPECIFICATION');
     row6.getCell('A').value = `FINISHING SPECIFICATION: ${finishingBase}  [Selected: ${finishingVal}]`;
     row6.height = 20;
 
-    // Row 7: Structural Element Label (Full Width)
-    worksheet.mergeCells('A7:N7');
+    // Row 7: Label
+    worksheet.mergeCells('A7:L7');
     const row7 = worksheet.getRow(7);
     row7.getCell('A').value = 'STRUCTURAL ELEMENT :';
     row7.height = 20;
 
-    // Row 8: Structural Element Checkboxes (Full Width)
-    worksheet.mergeCells('A8:N8');
+    // Row 8: Elements
+    worksheet.mergeCells('A8:L8');
     const row8 = worksheet.getRow(8);
     const elementVal = getPI('STRUCTURAL ELEMENT');
     const isBeam = elementVal === 'BEAM' ? '☒' : '☐';
     const isCol = elementVal === 'COLUMN' ? '☒' : '☐';
     const isOther = elementVal === 'OTHERS' ? '☒' : '☐';
-
     row8.getCell('A').value = `      BEAM  ${isBeam}              COLUMN  ${isCol}              OTHERS  ${isOther}`;
     row8.height = 20;
 
-    // Styling Header Box Borders
-    // We need to apply borders to these cells manually
-    // Rows 2 to 8
+    // Styling Header Box Borders (Cols 1 to 12)
     for (let r = 2; r <= 8; r++) {
         const row = worksheet.getRow(r);
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-            // We only care about columns 1 to 14 (A-N)
-            if (colNumber <= 14) {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
+            if (colNumber <= 12) {
+                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
                 cell.font = { name: 'Arial', size: 10, bold: false };
                 cell.alignment = { ...cell.alignment, vertical: 'middle', wrapText: true };
-
-                // Bold labels logic (simple override)
-                if (cell.value && typeof cell.value === 'string' && cell.value.includes(':')) {
-                    // partial bolding is hard in exceljs without rich text objects for every cell
-                    // we'll just bold the whole cell for specific header rows if desired
-                    // but standard text is fine.
-                }
             }
         });
     }
 
-    // Clean up borders for merged cells (sometimes ExcelJS needs explicit border on the main cell of merge)
-    ['A2', 'K2', 'A3', 'K3', 'A4', 'K4', 'A5', 'A6', 'A7', 'A8'].forEach(addr => {
+    // Clean up specific merged borders
+    ['A2', 'I2', 'A3', 'I3', 'A4', 'I4', 'A5', 'A6', 'A7', 'A8'].forEach(addr => {
         const cell = worksheet.getCell(addr);
-        cell.border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            bottom: { style: 'thin' },
-            right: { style: 'thin' }
-        };
-        // Align left usually
-        if (addr !== 'K4') { // K4 is Location, top aligned
-            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-        }
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        if (addr !== 'I4') cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
     });
 
-
     // --- 4. DRAW TABLE HEADERS ---
-    const headerRowStart = 10; // moved down
+    const headerRowStart = 10;
 
-    // Headers
     worksheet.mergeCells(`A${headerRowStart}:A${headerRowStart + 1}`); // NO.
     worksheet.getCell(`A${headerRowStart}`).value = 'NO.';
 
@@ -175,35 +152,25 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
     worksheet.mergeCells(`D${headerRowStart}:D${headerRowStart + 1}`); // CRITERIA
     worksheet.getCell(`D${headerRowStart}`).value = 'CRITERIA';
 
-    // Subcon
-    worksheet.mergeCells(`E${headerRowStart}:G${headerRowStart}`);
-    worksheet.getCell(`E${headerRowStart}`).value = 'Subcon\nCHECK';
+    // Subcon (E-H)
+    worksheet.mergeCells(`E${headerRowStart}:H${headerRowStart}`);
+    worksheet.getCell(`E${headerRowStart}`).value = 'Subcon CHECK';
 
-    // Maincon
-    worksheet.mergeCells(`H${headerRowStart}:J${headerRowStart}`);
-    worksheet.getCell(`H${headerRowStart}`).value = 'Maincon\nCHECK';
+    // Maincon (I-L)
+    worksheet.mergeCells(`I${headerRowStart}:L${headerRowStart}`);
+    worksheet.getCell(`I${headerRowStart}`).value = 'Maincon CHECK';
 
-    // Comments
-    worksheet.mergeCells(`K${headerRowStart}:K${headerRowStart + 1}`);
-    worksheet.getCell(`K${headerRowStart}`).value = 'COMMENTS (for all parties)';
-
-    // Recheck
-    worksheet.mergeCells(`L${headerRowStart}:N${headerRowStart}`);
-    worksheet.getCell(`L${headerRowStart}`).value = 'RE CHECK';
-
-    // Subheaders
+    // SubHeaders
     const subHeaderRow = worksheet.getRow(headerRowStart + 1);
     subHeaderRow.getCell('E').value = 'YES';
     subHeaderRow.getCell('F').value = 'NO';
     subHeaderRow.getCell('G').value = 'Date';
+    subHeaderRow.getCell('H').value = 'Comment'; // New
 
-    subHeaderRow.getCell('H').value = 'YES';
-    subHeaderRow.getCell('I').value = 'NO';
-    subHeaderRow.getCell('J').value = 'Date';
-
-    subHeaderRow.getCell('L').value = 'YES';
-    subHeaderRow.getCell('M').value = 'NO';
-    subHeaderRow.getCell('N').value = 'DATE';
+    subHeaderRow.getCell('I').value = 'YES';
+    subHeaderRow.getCell('J').value = 'NO';
+    subHeaderRow.getCell('K').value = 'Date';
+    subHeaderRow.getCell('L').value = 'Comment'; // New
 
     // Header Styling
     [worksheet.getRow(headerRowStart), worksheet.getRow(headerRowStart + 1)].forEach(row => {
@@ -235,12 +202,7 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
             cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F0F0' } };
         });
-        // Merge only B to N for section title to allow 'No' column to have the index
-        // worksheet.mergeCells(`B${currentRowIndex}:N${currentRowIndex}`);
-        // Actually typically section header spans all? Image shows '1' in 'No' col, 'SITE PREPARATION' in 'Items'.
-        // Columns C-N should probably be empty borders.
-        // Let's merge B to N for text overflow
-        worksheet.mergeCells(`B${currentRowIndex}:N${currentRowIndex}`);
+        worksheet.mergeCells(`B${currentRowIndex}:L${currentRowIndex}`);
 
         currentRowIndex++;
         sectionCounter++;
@@ -248,29 +210,41 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
         sectionQuestions.forEach((q, idx) => {
             const answer = answers[q.id]?.value;
             const comment = answers[q.id]?.comment || '';
+            // Note: Since we don't have separate comments in the provided structure yet, 
+            // we will place the shared comment in both or just one. 
+            // Let's place it in Subcon 'Comment' for now as a default, or leave both empty if you prefer.
+            // User requested "put the comment for each main and sub contractor". 
+            // Without split data, I'll put the SAME comment in both for visibility, or just Subcon.
+            // Let's put it in Subcon col H, and leave Maincon col L empty for manual entry if needed, 
+            // OR populate both. Let's populate 'Comment' into Subcon Comment col (H).
 
             const rowValues: any[] = [
                 String.fromCharCode(97 + idx),
                 q.text,
-                '', '', // Method, Criteria
+                '', '',
             ];
 
             if (q.type === 'dual-response-date' && typeof answer === 'object' && answer !== null) {
                 const main = answer.main_contractor || {};
                 const sub = answer.sub_contractor || {};
-                const formatDate = (d: string | undefined) => d ? new Date(d).toLocaleDateString('en-GB') : ''; // DD/MM/YYYY format or similar preferred
+                const formatDate = (d: string | undefined) => d ? new Date(d).toLocaleDateString('en-GB') : '';
+
+                // Subcon
                 rowValues.push(sub.response === 'YES' || sub.response === 'Yes' ? '✓' : '');
                 rowValues.push(sub.response === 'NO' || sub.response === 'No' ? '✓' : '');
                 rowValues.push(formatDate(sub.date));
+                rowValues.push(comment); // Subcon Comment
+
+                // Maincon
                 rowValues.push(main.response === 'YES' || main.response === 'Yes' ? '✓' : '');
                 rowValues.push(main.response === 'NO' || main.response === 'No' ? '✓' : '');
                 rowValues.push(formatDate(main.date));
+                rowValues.push(''); // Maincon Comment (Empty for now as we don't have 2 source strings)
             } else {
-                rowValues.push('', '', '', '', '', '');
+                // Generic / Single question type
+                // Just pad empty check cols
+                rowValues.push('', '', '', comment, '', '', '', '');
             }
-
-            rowValues.push(comment);
-            rowValues.push('', '', '');
 
             const dataRow = worksheet.addRow(rowValues);
             dataRow.font = { name: 'Arial', size: 10 };

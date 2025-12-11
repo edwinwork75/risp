@@ -1,11 +1,17 @@
 "use client";
 
-import { ClipboardCheck, Home, Activity, History, LayoutGrid, Table as TableIcon, Menu, PanelLeft, Download } from "lucide-react";
+import { ClipboardCheck, Home, Activity, History, LayoutGrid, Table as TableIcon, Menu, PanelLeft, Download, ChevronDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FormHeaderProps {
   showProgress?: boolean;
@@ -15,6 +21,7 @@ interface FormHeaderProps {
   onViewModeChange?: (mode: 'card' | 'table') => void;
   onMenuClick?: () => void;
   onExportClick?: () => void;
+  onExportPdfClick?: () => void;
 }
 
 export default function FormHeader({
@@ -24,7 +31,8 @@ export default function FormHeader({
   viewMode = 'card',
   onViewModeChange,
   onMenuClick,
-  onExportClick
+  onExportClick,
+  onExportPdfClick
 }: FormHeaderProps) {
   const router = useRouter();
 
@@ -81,17 +89,33 @@ export default function FormHeader({
 
         {/* Right Actions */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          {onExportClick && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onExportClick}
-              className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-full h-9 w-9 p-0 sm:w-auto sm:px-3 sm:h-9 mr-1"
-              title="Export to Excel"
-            >
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline font-medium">Export</span>
-            </Button>
+          {(onExportClick || onExportPdfClick) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-full h-9 w-9 p-0 sm:w-auto sm:px-3 sm:h-9 mr-1"
+                  title="Export"
+                >
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline font-medium">Export</span>
+                  <ChevronDown className="h-3 w-3 ml-1 hidden sm:inline opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onExportClick && (
+                  <DropdownMenuItem onClick={onExportClick}>
+                    Export to Excel
+                  </DropdownMenuItem>
+                )}
+                {onExportPdfClick && (
+                  <DropdownMenuItem onClick={onExportPdfClick}>
+                    Export to PDF
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {showViewToggle && onViewModeChange && (
