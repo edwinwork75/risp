@@ -39,7 +39,7 @@ export default function FormHeader({
               variant="ghost"
               size="icon"
               onClick={onMenuClick}
-              className="text-muted-foreground hover:text-foreground shrink-0"
+              className="text-muted-foreground hover:text-foreground shrink-0 lg:hidden"
               aria-label="Open Sections"
             >
               <PanelLeft className="h-5 w-5" />

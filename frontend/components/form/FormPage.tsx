@@ -22,7 +22,10 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogD
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import FormSidebar from "@/components/form/FormSidebar";
+import DesktopSidebar from "@/components/form/DesktopSidebar";
 import HistorySidebar from "@/components/form/HistorySidebar";
+import { cn } from "@/lib/utils";
+import { Arrow } from "@radix-ui/react-popover";
 
 interface AssessmentState {
   answers: Record<number, { value: string | object; comment?: string }>;
@@ -495,56 +498,66 @@ export default function FormPage() {
       <HistorySidebar open={historyOpen} onOpenChange={setHistoryOpen} />
 
       <main className="flex-1 flex flex-col">
-        <div className="container max-w-4xl mx-auto px-4 py-8 flex-1 flex flex-col">
-          {showIntro ? (
-            <div className="flex-1 flex items-center justify-center">
-              <IntroPage onStart={handleStartAssessment} />
-            </div>
-          ) : (
-            <>
-              {/* Toggle removed from here, moved to Header */}
-
-              <div ref={topOfFormRef} className="space-y-8">
-                {effectiveViewMode === 'card' ? renderCurrentSection(globalQuestionIndex) : (
-                  <ExcelChecklistLayout
-                    questions={currentSectionQuestions}
-                    answers={answers}
-                    files={files}
-                    fileUrls={fileObjectUrls}
-                    onAnswer={handleAnswer}
-                    onCommentChange={handleCommentChange}
-                    onFilesChange={handleFilesChange}
-                    globalStartIndex={globalQuestionIndex}
-                  />
-                )}
-              </div>
-
-              <div className="mt-8 flex justify-between items-center">
-                {currentPage > 0 && (
-                  <Button onClick={handlePrevPage} variant="outline">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Previous
-                  </Button>
-                )}
-                <div />
-                {currentPage < sections.length - 1 ? (
-                  <Button onClick={handleNextPage}>
-                    Save
-                    <Save className="h-4 w-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => setShowSubmitConfirmation(true)}
-                    className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? "Submitting..." : "Submit"}
-                    {!isUploading && <Send className="h-4 w-4" />}
-                  </Button>
-                )}
-              </div>
-            </>
+        <div className="container mx-auto px-4 py-8 flex-1 flex gap-6 lg:justify-center">
+          {!showIntro && (
+            <DesktopSidebar
+              sections={sidebarSections}
+              currentPage={currentPage}
+              onSectionClick={handleSectionClick}
+            />
           )}
+
+          <div className={cn("flex-1 flex flex-col min-w-0 transition-all", !showIntro && "max-w-4xl")}>
+            {showIntro ? (
+              <div className="flex-1 flex items-center justify-center">
+                <IntroPage onStart={handleStartAssessment} />
+              </div>
+            ) : (
+              <>
+                {/* Toggle removed from here, moved to Header */}
+
+                <div ref={topOfFormRef} className="space-y-8">
+                  {effectiveViewMode === 'card' ? renderCurrentSection(globalQuestionIndex) : (
+                    <ExcelChecklistLayout
+                      questions={currentSectionQuestions}
+                      answers={answers}
+                      files={files}
+                      fileUrls={fileObjectUrls}
+                      onAnswer={handleAnswer}
+                      onCommentChange={handleCommentChange}
+                      onFilesChange={handleFilesChange}
+                      globalStartIndex={globalQuestionIndex}
+                    />
+                  )}
+                </div>
+
+                <div className="mt-8 flex justify-between items-center">
+                  {currentPage > 0 && (
+                    <Button onClick={handlePrevPage} variant="outline">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Previous
+                    </Button>
+                  )}
+                  <div />
+                  {currentPage < sections.length - 1 ? (
+                    <Button onClick={handleNextPage}>
+                      Next
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setShowSubmitConfirmation(true)}
+                      className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+                      disabled={isUploading}
+                    >
+                      {isUploading ? "Submitting..." : "Submit"}
+                      {!isUploading && <Send className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </main>
 
