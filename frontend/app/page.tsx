@@ -28,7 +28,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please enter both email and password");
       return;
@@ -59,14 +59,14 @@ export default function LoginPage() {
       >
         <Card className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden border border-gray-200 bg-white">
           <CardHeader className="px-8 pt-10 pb-4">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
               className="flex justify-center mb-4"
             >
               <div className="w-16 h-16 rounded-full bg-background_cream flex items-center justify-center">
-              <img src="/logo.png" className="w-10 h-10" alt="NallaHealth Logo" />
+                <img src="/logo.png" className="w-10 h-10" alt="NallaHealth Logo" />
               </div>
             </motion.div>
             <CardTitle className="text-2xl font-bold text-center text-gray-800">
@@ -79,7 +79,7 @@ export default function LoginPage() {
 
           <CardContent className="px-8 py-6">
             <form onSubmit={handleLogin} className="space-y-5">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
@@ -99,7 +99,7 @@ export default function LoginPage() {
                 />
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
@@ -109,7 +109,7 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                     Password
                   </Label>
-                  <a 
+                  <a
                     href="/forgot-password"
                     className="text-xs text-black-200 hover:text-black hover:underline transition-colors duration-200"
                   >
@@ -151,6 +151,17 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
+
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            size="sm"
+            className="text-muted-foreground text-xs"
+            onClick={() => router.push('/q/form?id=super-user-assignment-id&userId=super-user-id&slug=super-user-slug&organisationId=super-user-org-id')}
+          >
+            Test Form Route
+          </Button>
+        </div>
       </motion.div>
     </div>
   );
