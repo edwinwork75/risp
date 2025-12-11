@@ -181,7 +181,7 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
 
     // Maincon
     worksheet.mergeCells(`H${headerRowStart}:J${headerRowStart}`);
-    worksheet.getCell(`H${headerRowStart}`).value = 'Maincom\nCHECK';
+    worksheet.getCell(`H${headerRowStart}`).value = 'Maincon\nCHECK';
 
     // Comments
     worksheet.mergeCells(`K${headerRowStart}:K${headerRowStart + 1}`);
@@ -294,63 +294,82 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
 
     const footerStart = currentRowIndex;
 
-    const footerHeader = worksheet.addRow(['CHECKED AND SUBMITTED BY :', '', '', '', 'CHECKED BY :', '', '', '', 'CHECKED/ACKNOWLEDGED BY :']);
+    const footerHeader = worksheet.addRow(['CHECKED AND SUBMITTED BY :', '', 'CHECKED BY :', '', '', '', '', '', '', 'CHECKED/ACKNOWLEDGED BY :']);
     footerHeader.font = { bold: true, size: 8, name: 'Arial' };
 
-    worksheet.mergeCells(`A${footerStart}:D${footerStart}`);
-    worksheet.mergeCells(`E${footerStart}:H${footerStart}`);
-    worksheet.mergeCells(`I${footerStart}:N${footerStart}`);
+    // Update merges to be roughly equal width (approx 50 each)
+    // Block 1: A-B (50)
+    // Block 2: C-I (50)
+    // Block 3: J-N (53)
+    worksheet.mergeCells(`A${footerStart}:B${footerStart}`);
+    worksheet.mergeCells(`C${footerStart}:I${footerStart}`);
+    worksheet.mergeCells(`J${footerStart}:N${footerStart}`);
 
-    worksheet.addRow([]);
-    worksheet.addRow([]);
-    worksheet.addRow([]);
+    const sigRow1 = worksheet.addRow([]);
+    const sigRow2 = worksheet.addRow([]);
+    const sigRow3 = worksheet.addRow([]);
+    sigRow1.height = 40;
+    sigRow2.height = 40;
+    sigRow3.height = 40;
+
+    // Merge signature empty space
+    for (let r = footerStart + 1; r <= footerStart + 3; r++) {
+        worksheet.mergeCells(`A${r}:B${r}`);
+        worksheet.mergeCells(`C${r}:I${r}`);
+        worksheet.mergeCells(`J${r}:N${r}`);
+    }
 
     const nameRow = worksheet.addRow([
-        'NAME: ' + getSigVal('Subcon Rep Name'), '', '', '',
-        'NAME: ' + getSigVal('Main Con Name'), '', '', '',
+        'NAME: ' + getSigVal('Subcon Rep Name'), '',
+        'NAME: ' + getSigVal('Main Con Name'), '', '', '', '', '', '',
         'NAME: ' + getSigVal('SRE Name')
     ]);
-    worksheet.mergeCells(`A${footerStart + 4}:D${footerStart + 4}`);
-    worksheet.mergeCells(`E${footerStart + 4}:H${footerStart + 4}`);
-    worksheet.mergeCells(`I${footerStart + 4}:N${footerStart + 4}`);
+    worksheet.mergeCells(`A${footerStart + 4}:B${footerStart + 4}`);
+    worksheet.mergeCells(`C${footerStart + 4}:I${footerStart + 4}`);
+    worksheet.mergeCells(`J${footerStart + 4}:N${footerStart + 4}`);
 
     const dateRow = worksheet.addRow([
-        'DATE: ' + getSigVal('Subcon Rep Date'), '', '', '',
-        'DATE: ' + getSigVal('Main Con Date'), '', '', '',
+        'DATE: ' + getSigVal('Subcon Rep Date'), '',
+        'DATE: ' + getSigVal('Main Con Date'), '', '', '', '', '', '',
         'DATE: ' + getSigVal('SRE Date')
     ]);
-    worksheet.mergeCells(`A${footerStart + 5}:D${footerStart + 5}`);
-    worksheet.mergeCells(`E${footerStart + 5}:H${footerStart + 5}`);
-    worksheet.mergeCells(`I${footerStart + 5}:N${footerStart + 5}`);
+    worksheet.mergeCells(`A${footerStart + 5}:B${footerStart + 5}`);
+    worksheet.mergeCells(`C${footerStart + 5}:I${footerStart + 5}`);
+    worksheet.mergeCells(`J${footerStart + 5}:N${footerStart + 5}`);
 
     // Insert Signatures
-    const addSignature = (id: number, colStartChar: string, colEndChar: string, rowStart: number, rowEnd: number) => {
+    const addSignature = (id: number, colIndex: number, rowIndex: number) => {
         const sigVal = answers[id]?.value;
         if (typeof sigVal === 'string' && sigVal.startsWith('data:image')) {
             const imageId = workbook.addImage({
                 base64: sigVal,
                 extension: 'png',
             });
-            // Construct range string e.g. "A50:D52"
-            // Note: rowStart and rowEnd in this helper are passed as 1-based 
-            // We use rowStart + 1 as the first signature row (the empty row)
-            // Actually, let's just pass the exact range string components
-            worksheet.addImage(imageId, `${colStartChar}${rowStart}:${colEndChar}${rowEnd}`);
+            // Use fixed size (ext) to control proportion and size reduced
+            // tl uses 0-based indices. rowIndex passed here is 1-based from previous logic (footerStart+1)
+            // so we subtract 1.
+            // We add a small offset to col/row to center/pad it slightly if possible, 
+            // but integer col/row with fixed size is a good start. 
+            // 0.1 col offset ~ 7px padding.
+            worksheet.addImage(imageId, {
+                tl: { col: colIndex + 0.2, row: (rowIndex - 1) + 0.2 },
+                ext: { width: 150, height: 75 }
+            } as any);
         }
     };
 
     // Rows for signature image: footerStart + 1 to footerStart + 3
-    const sigRowStart = footerStart + 1;
-    const sigRowEnd = footerStart + 3;
+    // We only need the starting row for TL anchor.
+    const sigRowVal = footerStart + 1;
 
-    // Subcon (904): A-D
-    addSignature(904, 'A', 'D', sigRowStart, sigRowEnd);
+    // Subcon (904): A-B -> Start Col Index 0
+    addSignature(904, 0, sigRowVal);
 
-    // Maincon (907): E-H
-    addSignature(907, 'E', 'H', sigRowStart, sigRowEnd);
+    // Maincon (907): C-I -> Start Col Index 2
+    addSignature(907, 2, sigRowVal);
 
-    // SRE (910): I-N
-    addSignature(910, 'I', 'N', sigRowStart, sigRowEnd);
+    // SRE (910): J-N -> Start Col Index 9
+    addSignature(910, 9, sigRowVal);
 
 
     for (let r = footerStart; r <= footerStart + 5; r++) {
