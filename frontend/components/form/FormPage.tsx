@@ -5,30 +5,35 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Send, ArrowLeft, ArrowRight, Save, History } from "lucide-react";
 import FormHeader from "@/components/form/FormHeader";
-import IntroPage from "@/components/form/IntroPage";
 import FormFooter from "@/components/form/FormFooter";
-import MultipleChoice from "@/components/form/QuestionTypes/MultipleChoice";
-import NumberInput from "@/components/form/QuestionTypes/NumberInput";
-import ShortAnswer from "@/components/form/QuestionTypes/ShortAnswer";
-import RadioQuestion from "@/components/form/QuestionTypes/RadioQuestion";
-import Dropdown from "@/components/form/QuestionTypes/Dropdown";
-import DateQuestion from "@/components/form/QuestionTypes/DateQuestion";
-import CheckMethod from "@/components/form/QuestionTypes/CheckMethod";
-import DualResponseDate from "@/components/form/QuestionTypes/DualResponseDate";
-import SignaturesSection from "@/components/form/SignaturesSection";
-import ExcelChecklistLayout from "@/components/form/ExcelChecklistLayout";
-import QuestionHistoryDrawer from "@/components/form/QuestionHistoryDrawer";
+import FormSidebar from "@/components/form/FormSidebar";
+import DesktopSidebar from "@/components/form/DesktopSidebar";
+import { cn } from "@/lib/utils";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
 import { Card, CardContent } from "@/components/ui/card";
-import FormSidebar from "@/components/form/FormSidebar";
-import DesktopSidebar from "@/components/form/DesktopSidebar";
-import { cn } from "@/lib/utils";
-import { Arrow } from "@radix-ui/react-popover";
-import { exportToExcel } from "@/lib/excelUtils";
-import { exportToPdf } from "@/lib/pdfUtils";
-import { format } from "date-fns";
+import dynamic from "next/dynamic";
+
+// Dynamic Imports for Code Splitting
+const IntroPage = dynamic(() => import("@/components/form/IntroPage"), {
+  loading: () => <div className="p-8 text-center">Loading...</div>
+});
+const SignaturesSection = dynamic(() => import("@/components/form/SignaturesSection"));
+const ExcelChecklistLayout = dynamic(() => import("@/components/form/ExcelChecklistLayout"), {
+  loading: () => <div className="p-8 text-center">Loading table view...</div>
+});
+const QuestionHistoryDrawer = dynamic(() => import("@/components/form/QuestionHistoryDrawer"));
+
+// Dynamic Question Types
+const MultipleChoice = dynamic(() => import("@/components/form/QuestionTypes/MultipleChoice"));
+const NumberInput = dynamic(() => import("@/components/form/QuestionTypes/NumberInput"));
+const ShortAnswer = dynamic(() => import("@/components/form/QuestionTypes/ShortAnswer"));
+const RadioQuestion = dynamic(() => import("@/components/form/QuestionTypes/RadioQuestion"));
+const Dropdown = dynamic(() => import("@/components/form/QuestionTypes/Dropdown"));
+const DateQuestion = dynamic(() => import("@/components/form/QuestionTypes/DateQuestion"));
+const CheckMethod = dynamic(() => import("@/components/form/QuestionTypes/CheckMethod"));
+const DualResponseDate = dynamic(() => import("@/components/form/QuestionTypes/DualResponseDate"));
 
 interface AssessmentState {
   answers: Record<number, { value: string | object; comment?: string }>;
@@ -103,6 +108,8 @@ export default function FormPage() {
 
   const saveToLocalStorage = (state: Partial<AssessmentState>) => {
     try {
+      if (typeof window === 'undefined') return;
+
       const currentState: AssessmentState = {
         answers,
         showIntro,
@@ -117,6 +124,8 @@ export default function FormPage() {
 
   const loadFromLocalStorage = (): AssessmentState | null => {
     try {
+      if (typeof window === 'undefined') return null;
+
       const saved = localStorage.getItem(getStorageKey());
       if (saved) {
         const state = JSON.parse(saved) as AssessmentState;
@@ -135,6 +144,7 @@ export default function FormPage() {
 
   const clearLocalStorage = () => {
     try {
+      if (typeof window === 'undefined') return;
       localStorage.removeItem(getStorageKey());
     } catch (error) {
       console.error("Error clearing localStorage:", error);
@@ -233,7 +243,6 @@ export default function FormPage() {
           for (const file of fileList) {
             const formData = new FormData();
             formData.append("file", file);
-            // This is an assumed endpoint. In a real project, replace with the actual one.
             const response = await mcApiService.post(`/files/upload`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -384,15 +393,15 @@ export default function FormPage() {
     setHistoryOpen(true);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const { exportToExcel } = await import("@/lib/excelUtils");
     exportToExcel(questions, answers, `Assessment_${slug || 'export'}.xlsx`);
   };
 
-  const handleExportPdf = () => {
-    // wait for 100ms to ensure any state updates if needed, though mostly accessing refs/state directly
-    setTimeout(() => {
-      exportToPdf(questions, answers, `Assessment_${slug || 'export'}.pdf`);
-    }, 100);
+  const handleExportPdf = async () => {
+    // Dynamic import
+    const { exportToPdf } = await import("@/lib/pdfUtils");
+    exportToPdf(questions, answers, `Assessment_${slug || 'export'}.pdf`);
   };
 
   const renderCurrentSection = (globalIndex: number) => {
@@ -463,19 +472,19 @@ export default function FormPage() {
 
     switch (question.type) {
       case "multiple-choice":
-        return <MultipleChoice {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <MultipleChoice {...commonProps} options={question.options || []} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "number":
-        return <NumberInput {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <NumberInput {...commonProps} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "short-answer":
-        return <ShortAnswer {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <ShortAnswer {...commonProps} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "radio":
-        return <RadioQuestion {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <RadioQuestion {...commonProps} options={question.options || []} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "dropdown":
-        return <Dropdown {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <Dropdown {...commonProps} options={question.options || []} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "date":
-        return <DateQuestion {...commonProps} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <DateQuestion {...commonProps} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "check-method":
-        return <CheckMethod {...commonProps} options={question.options || []} onChange={(val) => handleAnswer(question.id, val)} />;
+        return <CheckMethod {...commonProps} options={question.options || []} onChange={(val: any) => handleAnswer(question.id, val)} />;
       case "dual-response-date":
         return (
           <DualResponseDate
@@ -484,7 +493,7 @@ export default function FormPage() {
             fileUrls={{ main: fileObjectUrls[`${question.id}_main`] || [], sub: fileObjectUrls[`${question.id}_sub`] || [] }}
             onMainFilesChange={(files: File[]) => handleFilesChange(`${question.id}_main`, files)}
             onSubFilesChange={(files: File[]) => handleFilesChange(`${question.id}_sub`, files)}
-            onChange={(val) => handleAnswer(question.id, val)}
+            onChange={(val: any) => handleAnswer(question.id, val)}
           />
         );
       default:
@@ -541,8 +550,6 @@ export default function FormPage() {
               </div>
             ) : (
               <>
-                {/* Toggle removed from here, moved to Header */}
-
                 <div ref={topOfFormRef} className="space-y-8">
                   {effectiveViewMode === 'card' ? renderCurrentSection(globalQuestionIndex) : (
                     <ExcelChecklistLayout
