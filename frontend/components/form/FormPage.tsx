@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Send, ArrowLeft, ArrowRight, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Send, ArrowLeft, ArrowRight, LayoutGrid, Table as TableIcon, Save } from "lucide-react";
 import FormHeader from "@/components/form/FormHeader";
 import IntroPage from "@/components/form/IntroPage";
 import FormFooter from "@/components/form/FormFooter";
@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogD
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import FormSidebar from "@/components/form/FormSidebar";
+import HistorySidebar from "@/components/form/HistorySidebar";
 
 interface AssessmentState {
   answers: Record<number, { value: string | object; comment?: string }>;
@@ -480,6 +481,10 @@ export default function FormPage() {
         />
       )}
 
+      {!showIntro && (
+        <HistorySidebar />
+      )}
+
       <main className="flex-1 flex flex-col">
         <div className="container max-w-4xl mx-auto px-4 py-8 flex-1 flex flex-col">
           {showIntro ? (
@@ -541,8 +546,8 @@ export default function FormPage() {
                 <div />
                 {currentPage < sections.length - 1 ? (
                   <Button onClick={handleNextPage}>
-                    Next
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    Save
+                    <Save className="h-4 w-4 ml-2" />
                   </Button>
                 ) : (
                   <Button
