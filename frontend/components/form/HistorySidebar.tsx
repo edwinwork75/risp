@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { History, X, ChevronLeft, Clock, User, FileEdit } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { History, Clock, FileEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface HistoryItem {
     id: number;
@@ -59,10 +56,12 @@ const dummyHistory: HistoryItem[] = [
     },
 ];
 
-export default function HistorySidebar() {
-    const [isOpen, setIsOpen] = useState(false);
+interface HistorySidebarProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
 
-    // Role badge colors
+export default function HistorySidebar({ open, onOpenChange }: HistorySidebarProps) {
     const roleColors = {
         "Sub Contractor": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
         "Main Contractor": "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
@@ -70,45 +69,18 @@ export default function HistorySidebar() {
         "Admin": "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     };
 
-    if (!isOpen) {
-        return (
-            <div className="fixed top-32 right-4 z-50">
-                <Button
-                    onClick={() => setIsOpen(true)}
-                    variant="outline"
-                    className="rounded-full h-12 w-12 p-0 bg-background/80 backdrop-blur-sm shadow-lg border-l-4 border-l-primary hover:w-auto hover:px-4 group transition-all duration-300 ease-in-out overflow-hidden"
-                    aria-label="View Edit History"
-                >
-                    <History className="h-5 w-5 shrink-0" />
-                    <span className="w-0 overflow-hidden group-hover:w-auto group-hover:ml-2 transition-all duration-300 whitespace-nowrap opacity-0 group-hover:opacity-100">
-                        History
-                    </span>
-                </Button>
-            </div>
-        );
-    }
-
     return (
-        <div className="fixed top-32 right-4 z-50 h-[calc(100vh-9rem)]">
-            <Card className="w-80 h-full shadow-2xl bg-background/95 backdrop-blur-sm flex flex-col border-l-4 border-l-primary animate-in slide-in-from-right-10 duration-200">
-                <CardHeader className="flex flex-row items-center justify-between py-4 px-4 border-b shrink-0">
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent side="right" className="w-[85vw] sm:w-80 pt-10">
+                <SheetHeader className="px-1 border-b pb-4 mb-4">
                     <div className="flex items-center gap-2">
                         <History className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base font-semibold">Activity History</CardTitle>
+                        <SheetTitle>Activity History</SheetTitle>
                     </div>
-                    <Button
-                        onClick={() => setIsOpen(false)}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-gray-100 rounded-full"
-                        aria-label="Close history"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                </CardHeader>
+                </SheetHeader>
 
-                <ScrollArea className="flex-1 px-4">
-                    <div className="py-4 space-y-6 relative">
+                <ScrollArea className="h-[calc(100vh-8rem)] pr-4">
+                    <div className="py-2 space-y-6 relative ml-1">
                         {/* Vertical timeline line */}
                         <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-gray-200 dark:bg-gray-800" />
 
@@ -156,7 +128,7 @@ export default function HistorySidebar() {
                         </div>
                     </div>
                 </ScrollArea>
-            </Card>
-        </div>
+            </SheetContent>
+        </Sheet>
     );
 }

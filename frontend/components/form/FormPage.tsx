@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Send, ArrowLeft, ArrowRight, LayoutGrid, Table as TableIcon, Save } from "lucide-react";
+import { Send, ArrowLeft, ArrowRight, Save } from "lucide-react";
 import FormHeader from "@/components/form/FormHeader";
 import IntroPage from "@/components/form/IntroPage";
 import FormFooter from "@/components/form/FormFooter";
@@ -17,7 +17,6 @@ import CheckMethod from "@/components/form/QuestionTypes/CheckMethod";
 import DualResponseDate from "@/components/form/QuestionTypes/DualResponseDate";
 import SignaturesSection from "@/components/form/SignaturesSection";
 import ExcelChecklistLayout from "@/components/form/ExcelChecklistLayout";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
@@ -50,6 +49,7 @@ export default function FormPage() {
   const [savedState, setSavedState] = useState<AssessmentState | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [historyOpen, setHistoryOpen] = useState(false);
   const topOfFormRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -471,7 +471,14 @@ export default function FormPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-background">
-      <FormHeader showProgress={!showIntro} progress={progress} />
+      <FormHeader
+        showProgress={!showIntro}
+        progress={progress}
+        showViewToggle={!showIntro && currentSectionName !== "Project Information" && currentSectionName !== "Signatures"}
+        viewMode={effectiveViewMode}
+        onViewModeChange={setViewMode}
+        onHistoryClick={() => setHistoryOpen(true)}
+      />
 
       {!showIntro && (
         <FormSidebar
@@ -481,9 +488,8 @@ export default function FormPage() {
         />
       )}
 
-      {!showIntro && (
-        <HistorySidebar />
-      )}
+      {/* Controlled History Sidebar */}
+      <HistorySidebar open={historyOpen} onOpenChange={setHistoryOpen} />
 
       <main className="flex-1 flex flex-col">
         <div className="container max-w-4xl mx-auto px-4 py-8 flex-1 flex flex-col">
@@ -493,33 +499,7 @@ export default function FormPage() {
             </div>
           ) : (
             <>
-              {currentSectionName !== "Project Information" && currentSectionName !== "Signatures" && (
-                <div className="flex justify-end mb-6">
-                  <ToggleGroup
-                    type="single"
-                    value={effectiveViewMode}
-                    onValueChange={(v) => v && setViewMode(v as 'card' | 'table')}
-                    className="bg-gray-100 p-1 rounded-full border border-gray-200 shadow-inner"
-                  >
-                    <ToggleGroupItem
-                      value="card"
-                      aria-label="Card View"
-                      className="rounded-full px-4 py-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:font-bold data-[state=on]:shadow-sm transition-all duration-300 ease-in-out hover:bg-gray-200 data-[state=on]:hover:bg-primary/90"
-                    >
-                      <LayoutGrid className="h-4 w-4 mr-2" />
-                      Card View
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                      value="table"
-                      aria-label="Table View"
-                      className="rounded-full px-4 py-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:font-bold data-[state=on]:shadow-sm transition-all duration-300 ease-in-out hover:bg-gray-200 data-[state=on]:hover:bg-primary/90"
-                    >
-                      <TableIcon className="h-4 w-4 mr-2" />
-                      Excel View
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-              )}
+              {/* Toggle removed from here, moved to Header */}
 
               <div ref={topOfFormRef} className="space-y-8">
                 {effectiveViewMode === 'card' ? renderCurrentSection(globalQuestionIndex) : (
