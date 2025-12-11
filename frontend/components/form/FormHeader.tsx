@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardCheck, Home, Activity, History, LayoutGrid, Table as TableIcon, Menu, PanelLeft } from "lucide-react";
+import { ClipboardCheck, Home, Activity, History, LayoutGrid, Table as TableIcon, Menu, PanelLeft, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ interface FormHeaderProps {
   onViewModeChange?: (mode: 'card' | 'table') => void;
   onHistoryClick?: () => void;
   onMenuClick?: () => void;
+  onExportClick?: () => void;
 }
 
 export default function FormHeader({
@@ -24,7 +25,8 @@ export default function FormHeader({
   viewMode = 'card',
   onViewModeChange,
   onHistoryClick,
-  onMenuClick
+  onMenuClick,
+  onExportClick
 }: FormHeaderProps) {
   const router = useRouter();
 
@@ -81,6 +83,19 @@ export default function FormHeader({
 
         {/* Right Actions */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {onExportClick && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onExportClick}
+              className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-full h-9 w-9 p-0 sm:w-auto sm:px-3 sm:h-9 mr-1"
+              title="Export to Excel"
+            >
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline font-medium">Export</span>
+            </Button>
+          )}
+
           {showViewToggle && onViewModeChange && (
             <div className="flex bg-secondary/50 p-1 rounded-lg border border-border/50 mr-1 sm:mr-2">
               <ToggleGroup

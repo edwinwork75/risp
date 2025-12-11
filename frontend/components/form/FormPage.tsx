@@ -26,6 +26,7 @@ import DesktopSidebar from "@/components/form/DesktopSidebar";
 import HistorySidebar from "@/components/form/HistorySidebar";
 import { cn } from "@/lib/utils";
 import { Arrow } from "@radix-ui/react-popover";
+import { exportToExcel } from "@/lib/excelUtils";
 
 interface AssessmentState {
   answers: Record<number, { value: string | object; comment?: string }>;
@@ -375,6 +376,10 @@ export default function FormPage() {
     return index;
   };
 
+  const handleExport = () => {
+    exportToExcel(questions, answers, `Assessment_${slug || 'export'}.xlsx`);
+  };
+
   const renderCurrentSection = (globalIndex: number) => {
     if (sections.length === 0) return null;
 
@@ -483,6 +488,7 @@ export default function FormPage() {
         onViewModeChange={setViewMode}
         onHistoryClick={() => setHistoryOpen(true)}
         onMenuClick={!showIntro ? () => setSectionsOpen(true) : undefined}
+        onExportClick={!showIntro ? handleExport : undefined}
       />
 
       <FormSidebar
