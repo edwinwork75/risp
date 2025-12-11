@@ -57,7 +57,7 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden border border-gray-200 bg-white">
+        {/* <Card className="w-full max-w-md shadow-lg rounded-2xl overflow-hidden border border-gray-200 bg-white">
           <CardHeader className="px-8 pt-10 pb-4">
             <motion.div
               initial={{ scale: 0.9 }}
@@ -150,7 +150,7 @@ export default function LoginPage() {
               </motion.div>
             </form>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <div className="mt-4 text-center">
           <Button
