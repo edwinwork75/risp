@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Send, ArrowLeft, ArrowRight } from "lucide-react";
+import { Send, ArrowLeft, ArrowRight, LayoutGrid, Table as TableIcon } from "lucide-react";
 import FormHeader from "@/components/form/FormHeader";
 import IntroPage from "@/components/form/IntroPage";
 import FormFooter from "@/components/form/FormFooter";
@@ -15,14 +15,14 @@ import Dropdown from "@/components/form/QuestionTypes/Dropdown";
 import DateQuestion from "@/components/form/QuestionTypes/DateQuestion";
 import CheckMethod from "@/components/form/QuestionTypes/CheckMethod";
 import DualResponseDate from "@/components/form/QuestionTypes/DualResponseDate";
+import SignaturesSection from "@/components/form/SignaturesSection";
 import ExcelChecklistLayout from "@/components/form/ExcelChecklistLayout";
-import { LayoutGrid, Table as TableIcon } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import FormSidebar from "@/components/form/FormSidebar";
 
 interface AssessmentState {
   answers: Record<number, { value: string | object; comment?: string }>;
@@ -72,6 +72,19 @@ export default function FormPage() {
     });
     return Object.entries(sectionsMap);
   }, [questions]);
+
+  const sidebarSections = useMemo(() => {
+    return sections
+      .filter(([name]) => name !== "Signatures") // Filter out Signatures
+      .map(([name, questions]) => ({
+        name,
+        questionCount: questions.length
+      }));
+  }, [sections]);
+
+  const handleSectionClick = (page: number) => {
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     if (!showIntro) {
@@ -362,6 +375,16 @@ export default function FormPage() {
 
     const [sectionName, sectionQuestions] = sections[currentPage];
 
+    if (sectionName === "Signatures") {
+      return (
+        <SignaturesSection
+          questions={sectionQuestions}
+          answers={answers}
+          onAnswer={handleAnswer}
+        />
+      );
+    }
+
     // Card View Rendering
     return (
       <div className="space-y-6">
@@ -436,7 +459,7 @@ export default function FormPage() {
 
   // Determine current section properties
   const currentSectionName = sections.length > 0 ? sections[currentPage][0] : "";
-  const effectiveViewMode = currentSectionName === "Project Information" ? "card" : viewMode;
+  const effectiveViewMode = (currentSectionName === "Project Information" || currentSectionName === "Signatures") ? "card" : viewMode;
 
   // Calculate progress
   const progress = sections.length > 0 ? ((currentPage + 1) / sections.length) * 100 : 0;
@@ -449,6 +472,14 @@ export default function FormPage() {
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-background">
       <FormHeader showProgress={!showIntro} progress={progress} />
 
+      {!showIntro && (
+        <FormSidebar
+          sections={sidebarSections}
+          currentPage={currentPage}
+          onSectionClick={handleSectionClick}
+        />
+      )}
+
       <main className="flex-1 flex flex-col">
         <div className="container max-w-4xl mx-auto px-4 py-8 flex-1 flex flex-col">
           {showIntro ? (
@@ -457,7 +488,7 @@ export default function FormPage() {
             </div>
           ) : (
             <>
-              {currentSectionName !== "Project Information" && (
+              {currentSectionName !== "Project Information" && currentSectionName !== "Signatures" && (
                 <div className="flex justify-end mb-6">
                   <ToggleGroup
                     type="single"
