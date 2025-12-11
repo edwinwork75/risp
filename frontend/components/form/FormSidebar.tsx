@@ -39,12 +39,12 @@ export function SidebarNav({
               : "hover:bg-accent hover:text-accent-foreground"
           )}
         >
-          <div className="flex justify-between items-center">
+          <span className="flex justify-between items-center w-full">
             <span>{section.name}</span>
             <span className="text-xs opacity-70">
               ({section.questionCount})
             </span>
-          </div>
+          </span>
         </button>
       ))}
     </nav>

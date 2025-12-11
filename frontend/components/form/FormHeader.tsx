@@ -13,7 +13,6 @@ interface FormHeaderProps {
   showViewToggle?: boolean;
   viewMode?: 'card' | 'table';
   onViewModeChange?: (mode: 'card' | 'table') => void;
-  onHistoryClick?: () => void;
   onMenuClick?: () => void;
   onExportClick?: () => void;
 }
@@ -24,7 +23,6 @@ export default function FormHeader({
   showViewToggle = false,
   viewMode = 'card',
   onViewModeChange,
-  onHistoryClick,
   onMenuClick,
   onExportClick
 }: FormHeaderProps) {
@@ -126,16 +124,7 @@ export default function FormHeader({
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onHistoryClick}
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-full h-9 w-9 p-0 sm:w-auto sm:px-3 sm:h-9"
-            title="View History"
-          >
-            <History className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline font-medium">History</span>
-          </Button>
+
         </div>
       </div>
 

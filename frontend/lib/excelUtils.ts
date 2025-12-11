@@ -258,12 +258,13 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
             if (q.type === 'dual-response-date' && typeof answer === 'object' && answer !== null) {
                 const main = answer.main_contractor || {};
                 const sub = answer.sub_contractor || {};
+                const formatDate = (d: string | undefined) => d ? new Date(d).toLocaleDateString('en-GB') : ''; // DD/MM/YYYY format or similar preferred
                 rowValues.push(sub.response === 'YES' || sub.response === 'Yes' ? '✓' : '');
                 rowValues.push(sub.response === 'NO' || sub.response === 'No' ? '✓' : '');
-                rowValues.push(sub.date || '');
+                rowValues.push(formatDate(sub.date));
                 rowValues.push(main.response === 'YES' || main.response === 'Yes' ? '✓' : '');
                 rowValues.push(main.response === 'NO' || main.response === 'No' ? '✓' : '');
-                rowValues.push(main.date || '');
+                rowValues.push(formatDate(main.date));
             } else {
                 rowValues.push('', '', '', '', '', '');
             }
@@ -321,6 +322,36 @@ export const exportToExcel = async (questions: any[], answers: Record<number, an
     worksheet.mergeCells(`A${footerStart + 5}:D${footerStart + 5}`);
     worksheet.mergeCells(`E${footerStart + 5}:H${footerStart + 5}`);
     worksheet.mergeCells(`I${footerStart + 5}:N${footerStart + 5}`);
+
+    // Insert Signatures
+    const addSignature = (id: number, colStartChar: string, colEndChar: string, rowStart: number, rowEnd: number) => {
+        const sigVal = answers[id]?.value;
+        if (typeof sigVal === 'string' && sigVal.startsWith('data:image')) {
+            const imageId = workbook.addImage({
+                base64: sigVal,
+                extension: 'png',
+            });
+            // Construct range string e.g. "A50:D52"
+            // Note: rowStart and rowEnd in this helper are passed as 1-based 
+            // We use rowStart + 1 as the first signature row (the empty row)
+            // Actually, let's just pass the exact range string components
+            worksheet.addImage(imageId, `${colStartChar}${rowStart}:${colEndChar}${rowEnd}`);
+        }
+    };
+
+    // Rows for signature image: footerStart + 1 to footerStart + 3
+    const sigRowStart = footerStart + 1;
+    const sigRowEnd = footerStart + 3;
+
+    // Subcon (904): A-D
+    addSignature(904, 'A', 'D', sigRowStart, sigRowEnd);
+
+    // Maincon (907): E-H
+    addSignature(907, 'E', 'H', sigRowStart, sigRowEnd);
+
+    // SRE (910): I-N
+    addSignature(910, 'I', 'N', sigRowStart, sigRowEnd);
+
 
     for (let r = footerStart; r <= footerStart + 5; r++) {
         const row = worksheet.getRow(r);

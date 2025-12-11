@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Send, ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { Send, ArrowLeft, ArrowRight, Save, History } from "lucide-react";
 import FormHeader from "@/components/form/FormHeader";
 import IntroPage from "@/components/form/IntroPage";
 import FormFooter from "@/components/form/FormFooter";
@@ -17,13 +17,13 @@ import CheckMethod from "@/components/form/QuestionTypes/CheckMethod";
 import DualResponseDate from "@/components/form/QuestionTypes/DualResponseDate";
 import SignaturesSection from "@/components/form/SignaturesSection";
 import ExcelChecklistLayout from "@/components/form/ExcelChecklistLayout";
+import QuestionHistoryDrawer from "@/components/form/QuestionHistoryDrawer";
 import { mcApiService } from "@/lib/mcApiService";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { calculateSectionScores, getSectionStatsAndRecommendation } from "@/components/report/reportUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import FormSidebar from "@/components/form/FormSidebar";
 import DesktopSidebar from "@/components/form/DesktopSidebar";
-import HistorySidebar from "@/components/form/HistorySidebar";
 import { cn } from "@/lib/utils";
 import { Arrow } from "@radix-ui/react-popover";
 import { exportToExcel } from "@/lib/excelUtils";
@@ -54,6 +54,7 @@ export default function FormPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [selectedHistoryQuestion, setSelectedHistoryQuestion] = useState<{ id: number, text: string } | null>(null);
   const [sectionsOpen, setSectionsOpen] = useState(false);
   const topOfFormRef = useRef<HTMLDivElement>(null);
 
@@ -376,6 +377,11 @@ export default function FormPage() {
     return index;
   };
 
+  const handleHistoryClick = (question: any) => {
+    setSelectedHistoryQuestion({ id: question.id, text: question.text });
+    setHistoryOpen(true);
+  };
+
   const handleExport = () => {
     exportToExcel(questions, answers, `Assessment_${slug || 'export'}.xlsx`);
   };
@@ -410,8 +416,18 @@ export default function FormPage() {
               : `${String.fromCharCode(97 + index)}.`;
 
           return (
-            <Card key={question.id} className="overflow-hidden shadow-sm">
+            <Card key={question.id} className="overflow-hidden shadow-sm relative group">
               <CardContent className="p-6">
+                {/* Floating History Button for Card View */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4 h-8 w-8 text-muted-foreground hover:text-foreground bg-secondary/20 hover:bg-secondary/50 rounded-full"
+                  onClick={() => handleHistoryClick(question)}
+                  title="View History"
+                >
+                  <History className="h-4 w-4" />
+                </Button>
                 {renderQuestion(question, questionPrefix)}
               </CardContent>
             </Card>
@@ -486,7 +502,6 @@ export default function FormPage() {
         showViewToggle={!showIntro && currentSectionName !== "Project Information" && currentSectionName !== "Signatures"}
         viewMode={effectiveViewMode}
         onViewModeChange={setViewMode}
-        onHistoryClick={() => setHistoryOpen(true)}
         onMenuClick={!showIntro ? () => setSectionsOpen(true) : undefined}
         onExportClick={!showIntro ? handleExport : undefined}
       />
@@ -498,9 +513,6 @@ export default function FormPage() {
         open={sectionsOpen}
         onOpenChange={setSectionsOpen}
       />
-
-      {/* Controlled History Sidebar */}
-      <HistorySidebar open={historyOpen} onOpenChange={setHistoryOpen} />
 
       <main className="flex-1 flex flex-col">
         <div className="container mx-auto px-4 py-8 flex-1 flex gap-6 lg:justify-center">
@@ -573,6 +585,15 @@ export default function FormPage() {
       </main>
 
       <FormFooter />
+
+      {/* Individual Question History Drawer */}
+      {selectedHistoryQuestion && (
+        <QuestionHistoryDrawer
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          questionText={selectedHistoryQuestion.text}
+        />
+      )}
 
       {showResumeDialog && (
         <Dialog open={showResumeDialog} onOpenChange={() => { }}>

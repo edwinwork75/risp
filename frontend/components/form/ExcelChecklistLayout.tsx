@@ -14,8 +14,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import FileUpload from "./QuestionTypes/FileUpload"; // Reusing generic file upload or we can make a compact one
-// Actually let's use a simpler compact file button for the table or just the standard one but styled smaller
+import FileUpload from "./QuestionTypes/FileUpload";
+import QuestionHistoryDrawer from "./QuestionHistoryDrawer";
+import { History } from "lucide-react";
+import { useState } from "react";
 
 interface ExcelChecklistLayoutProps {
     questions: any[];
@@ -66,6 +68,14 @@ export default function ExcelChecklistLayout({
     const sections = Object.entries(sectionsMap);
     const currentSectionName = sections.length > 0 ? sections[0][0] : "";
 
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [selectedQuestion, setSelectedQuestion] = useState<{ id: number, text: string } | null>(null);
+
+    const handleHistoryClick = (q: any) => {
+        setSelectedQuestion({ id: q.id, text: q.text });
+        setHistoryOpen(true);
+    };
+
     return (
         <div className="space-y-4">
             {currentSectionName && currentSectionName !== "General" && (
@@ -111,8 +121,18 @@ export default function ExcelChecklistLayout({
                                             <TableCell className="font-medium align-top border-r">{rowLabel}</TableCell>
 
                                             {/* Item / Criteria */}
-                                            <TableCell className="align-top border-r">
-                                                <p className="text-sm whitespace-pre-wrap">{q.text}</p>
+                                            {/* Item / Criteria */}
+                                            <TableCell className="align-top border-r relative group">
+                                                <p className="text-sm whitespace-pre-wrap pr-6">{q.text}</p>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-5 w-5 absolute top-2 right-1"
+                                                    onClick={() => handleHistoryClick(q)}
+                                                    title="View History"
+                                                >
+                                                    <History className="h-3 w-3 text-muted-foreground" />
+                                                </Button>
                                             </TableCell>
 
                                             {/* Subcontractor Columns */}
@@ -255,6 +275,13 @@ export default function ExcelChecklistLayout({
                     </TableBody>
                 </Table>
             </div>
+            {selectedQuestion && (
+                <QuestionHistoryDrawer
+                    open={historyOpen}
+                    onOpenChange={setHistoryOpen}
+                    questionText={selectedQuestion.text}
+                />
+            )}
         </div>
     );
 }
