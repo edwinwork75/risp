@@ -88,101 +88,113 @@ export default function FormPreview() {
                     )}
 
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                        {currentFields.map((field) => (
-                            <Card key={field.id}>
-                                <CardContent className="p-6">
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between">
-                                            <Label className="text-base font-medium">
-                                                {field.label}
-                                                {field.required && <span className="text-red-500 ml-1">*</span>}
-                                            </Label>
-                                        </div>
+                        {currentFields.map((field, index) => {
+                            // Calculate numbering per page
+                            const questionIndex = currentFields
+                                .slice(0, index + 1)
+                                .filter(f => f.type !== 'section')
+                                .length;
+                            const showNumber = field.type !== 'section';
 
-                                        {/* Field Rendering Logic */}
-                                        {(() => {
-                                            switch (field.type) {
-                                                case 'text':
-                                                case 'date':
-                                                case 'time':
-                                                case 'file':
-                                                case 'image':
-                                                    return (
-                                                        <Input
-                                                            type={field.type === 'image' ? 'file' : field.type}
-                                                            placeholder={field.placeholder}
-                                                            required={field.required}
-                                                            onChange={(e) => handleValueChange(field.id, e.target.value)}
-                                                        />
-                                                    );
-                                                case 'textarea':
-                                                    return (
-                                                        <Textarea
-                                                            placeholder={field.placeholder}
-                                                            required={field.required}
-                                                            className="min-h-[100px]"
-                                                            onChange={(e) => handleValueChange(field.id, e.target.value)}
-                                                        />
-                                                    );
-                                                case 'dropdown':
-                                                    return (
-                                                        <Select onValueChange={(val) => handleValueChange(field.id, val)}>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select an option" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
+                            return (
+                                <Card key={field.id}>
+                                    <CardContent className="p-6">
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between">
+                                                <div className="flex gap-2">
+                                                    {showNumber && <span className="text-base font-medium">{questionIndex}.</span>}
+                                                    <Label className="text-base font-medium">
+                                                        {field.label}
+                                                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                                                    </Label>
+                                                </div>
+                                            </div>
+
+                                            {/* Field Rendering Logic */}
+                                            {(() => {
+                                                switch (field.type) {
+                                                    case 'text':
+                                                    case 'date':
+                                                    case 'time':
+                                                    case 'file':
+                                                    case 'image':
+                                                        return (
+                                                            <Input
+                                                                type={field.type === 'image' ? 'file' : field.type}
+                                                                placeholder={field.placeholder}
+                                                                required={field.required}
+                                                                onChange={(e) => handleValueChange(field.id, e.target.value)}
+                                                            />
+                                                        );
+                                                    case 'textarea':
+                                                        return (
+                                                            <Textarea
+                                                                placeholder={field.placeholder}
+                                                                required={field.required}
+                                                                className="min-h-[100px]"
+                                                                onChange={(e) => handleValueChange(field.id, e.target.value)}
+                                                            />
+                                                        );
+                                                    case 'dropdown':
+                                                        return (
+                                                            <Select onValueChange={(val) => handleValueChange(field.id, val)}>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select an option" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {field.options?.map((opt, idx) => (
+                                                                        <SelectItem key={idx} value={opt || `option-${idx}`}>
+                                                                            {opt}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        );
+                                                    case 'radio':
+                                                        return (
+                                                            <RadioGroup onValueChange={(val) => handleValueChange(field.id, val)}>
                                                                 {field.options?.map((opt, idx) => (
-                                                                    <SelectItem key={idx} value={opt || `option-${idx}`}>
-                                                                        {opt}
-                                                                    </SelectItem>
+                                                                    <div key={idx} className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value={opt || `option-${idx}`} id={`${field.id}-${idx}`} />
+                                                                        <Label htmlFor={`${field.id}-${idx}`}>{opt}</Label>
+                                                                    </div>
                                                                 ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    );
-                                                case 'radio':
-                                                    return (
-                                                        <RadioGroup onValueChange={(val) => handleValueChange(field.id, val)}>
-                                                            {field.options?.map((opt, idx) => (
-                                                                <div key={idx} className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value={opt || `option-${idx}`} id={`${field.id}-${idx}`} />
-                                                                    <Label htmlFor={`${field.id}-${idx}`}>{opt}</Label>
-                                                                </div>
-                                                            ))}
-                                                        </RadioGroup>
-                                                    );
-                                                case 'checkbox':
-                                                    return (
-                                                        <div className="space-y-2">
-                                                            {field.options?.map((opt, idx) => (
-                                                                <div key={idx} className="flex items-center space-x-2">
-                                                                    <Checkbox id={`${field.id}-${idx}`} />
-                                                                    <Label htmlFor={`${field.id}-${idx}`}>{opt}</Label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    );
-                                                case 'section':
-                                                    return (
-                                                        <div className="py-2">
-                                                            {/* This is a "Title/Description" field type, not a page break */}
-                                                            <h3 className="text-lg font-medium">{field.label}</h3>
-                                                            {field.placeholder && <p className="text-sm text-gray-500">{field.placeholder}</p>}
-                                                        </div>
-                                                    );
-                                                case 'signature':
-                                                    return (
-                                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 text-center cursor-pointer hover:bg-gray-100 transition-colors">
-                                                            <p className="text-gray-500">Tap to Sign (Simulation)</p>
-                                                        </div>
-                                                    );
-                                                default:
-                                                    return null;
-                                            }
-                                        })()}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                                            </RadioGroup>
+                                                        );
+                                                    case 'checkbox':
+                                                        return (
+                                                            <div className="space-y-2">
+                                                                {field.options?.map((opt, idx) => (
+                                                                    <div key={idx} className="flex items-center space-x-2">
+                                                                        <Checkbox id={`${field.id}-${idx}`} />
+                                                                        <Label htmlFor={`${field.id}-${idx}`}>{opt}</Label>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    case 'section':
+                                                        return (
+                                                            <div className="py-2">
+                                                                {/* This is a "Title/Description" field type, not a page break */}
+                                                                <h3 className="text-lg font-medium">{field.label}</h3>
+                                                                {field.placeholder && <p className="text-sm text-gray-500">{field.placeholder}</p>}
+                                                            </div>
+                                                        );
+                                                    case 'signature':
+                                                        return (
+                                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 text-center cursor-pointer hover:bg-gray-100 transition-colors">
+                                                                <p className="text-gray-500">Tap to Sign (Simulation)</p>
+                                                            </div>
+                                                        );
+                                                    default:
+                                                        return null;
+                                                }
+                                            })()}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
                     </form>
 
                     <div className="flex justify-between items-center py-6">

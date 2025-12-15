@@ -31,6 +31,7 @@ interface FieldEditorProps {
   onAddBelow: () => void;
   isActive: boolean;
   onClick: (event: React.MouseEvent) => void;
+  index?: number;
 }
 
 const fieldTypeIcons: Record<FieldType, JSX.Element> = {
@@ -113,7 +114,8 @@ const renderPreview = (field: FormField) => {
 }
 
 
-export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow, isActive, onClick }: FieldEditorProps) {
+
+export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow, isActive, onClick, index }: FieldEditorProps) {
   const {
     attributes,
     listeners,
@@ -155,7 +157,8 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
               <>
                 {/* Active State: Full Editing UI */}
                 <div className="flex justify-between items-start mb-4">
-                  <div className="flex-grow pr-4">
+                  <div className="flex-grow pr-4 flex items-center gap-2">
+                    {index !== undefined && <span className="text-lg font-medium min-w-[24px]">{index}.</span>}
                     <Input
                       value={field.label}
                       onChange={(e) => onUpdate(field.id, { label: e.target.value })}
@@ -223,16 +226,17 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
                 {/* Inactive State: Preview */}
                 <div className="min-h-[100px]">
                   <div className="flex justify-between items-start">
-                    <>
+                    <div className="flex items-start gap-2">
+                      {index !== undefined && <span className="text-lg font-medium min-w-[24px]">{index}.</span>}
                       <p className="text-lg font-normal">
                         {field.label}
                         {field.required && <span className="text-destructive text-lg ml-1">*</span>}
                       </p>
-                      <Badge variant="outline" className="flex items-center gap-2">
-                        {fieldTypeIcons[field.type]}
-                        <span className="capitalize">{field.type}</span>
-                      </Badge>
-                    </>
+                    </div>
+                    <Badge variant="outline" className="flex items-center gap-2">
+                      {fieldTypeIcons[field.type]}
+                      <span className="capitalize">{field.type}</span>
+                    </Badge>
                   </div>
                   <div className="mt-2">
                     {renderPreview(field)}
@@ -242,6 +246,6 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
             ))}
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 }

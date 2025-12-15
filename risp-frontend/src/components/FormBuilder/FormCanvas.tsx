@@ -79,26 +79,43 @@ export function FormCanvas({
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
         >
+
             <SortableContext
                 items={fields.map((f) => f.id)}
                 strategy={verticalListSortingStrategy}
             >
                 <div className="space-y-4">
-                    {fields.map((field, index) => (
-                        <FieldEditor
-                            key={field.id}
-                            field={field}
-                            onUpdate={onUpdate}
-                            onDelete={onDelete}
-                            onDuplicate={onDuplicate}
-                            onAddBelow={() => onAddBelow(index + 1)}
-                            isActive={field.id === activeFieldId}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveFieldId(field.id);
-                            }}
-                        />
-                    ))}
+                    {fields.map((field, index) => {
+                        // Calculate index excluding visual-only fields (like section titles)
+                        // Actually, user said "auto numbering for each page".
+                        // Assuming we skip 'section' type (which is Title/Desc).
+                        // Note: 'fields' prop passed here is alrady filtered by active section.
+
+                        // We need to count how many fields BEFORE this one are question types.
+                        const questionIndex = fields
+                            .slice(0, index + 1)
+                            .filter(f => f.type !== 'section')
+                            .length;
+
+                        const showNumber = field.type !== 'section';
+
+                        return (
+                            <FieldEditor
+                                key={field.id}
+                                field={field}
+                                onUpdate={onUpdate}
+                                onDelete={onDelete}
+                                onDuplicate={onDuplicate}
+                                onAddBelow={() => onAddBelow(index + 1)}
+                                isActive={field.id === activeFieldId}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveFieldId(field.id);
+                                }}
+                                index={showNumber ? questionIndex : undefined}
+                            />
+                        );
+                    })}
                 </div>
             </SortableContext>
         </DndContext>
