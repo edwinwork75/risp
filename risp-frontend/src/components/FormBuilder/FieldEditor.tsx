@@ -4,10 +4,11 @@ import { SectionEditor } from "./SectionEditor";
 import { FormField, FieldType } from "@/types/form";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy, Type, CheckSquare, ChevronDown, ToggleLeft, Calendar, Clock, File, Hash, Phone, FileImage, Heading } from "lucide-react";
+import { GripVertical, Trash2, Copy, Type, CheckSquare, ChevronDown, ToggleLeft, Calendar, Clock, File, FileImage, Heading, PenTool, AlignLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -42,12 +43,16 @@ const fieldTypeIcons: Record<FieldType, JSX.Element> = {
   file: <File className="h-4 w-4" />,
   image: <FileImage className="h-4 w-4" />,
   section: <Heading className="h-4 w-4" />,
+  signature: <PenTool className="h-4 w-4" />,
+  textarea: <AlignLeft className="h-4 w-4" />,
 };
 
 const renderPreview = (field: FormField) => {
   switch (field.type) {
     case 'text':
-
+      return <Input placeholder={field.placeholder || `Enter ${field.type}`} disabled className="mt-2 placeholder-gray-500" />;
+    case 'textarea':
+      return <Textarea placeholder={field.placeholder || "Long answer text"} disabled className="mt-2 placeholder-gray-500 min-h-[100px]" />;
     case 'date':
     case 'time':
       return <Input placeholder={field.placeholder || `Enter ${field.type}`} disabled className="mt-2 placeholder-gray-500" />;
@@ -78,6 +83,30 @@ const renderPreview = (field: FormField) => {
       return <Input type="file" disabled className="mt-2 placeholder-gray-500" />;
     case 'image':
       return <Input type="file" accept="image/*" disabled className="mt-2 placeholder-gray-500" />;
+    case 'signature':
+      return (
+        <div className="mt-4 space-y-4 border rounded-lg p-4 bg-gray-50/50">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Full Name</Label>
+              <Input placeholder="Signer's Name" disabled className="bg-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Date</Label>
+              <Input type="date" disabled className="bg-white" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Signature</Label>
+            <div className="h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <PenTool className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <span className="text-sm">Sign Here</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     default:
       return null;
   }
@@ -100,7 +129,7 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
 
 
   const fieldTypes: FieldType[] = [
-    'text', 'dropdown', 'radio', 'checkbox', 'date', 'time', 'file', 'image'
+    'text', 'textarea', 'dropdown', 'radio', 'checkbox', 'date', 'time', 'file', 'image', 'signature'
   ];
 
   return (
@@ -187,19 +216,6 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
                       onCheckedChange={(checked) => onUpdate(field.id, { required: checked })}
                     />
                   </>
-                </div>
-
-                <div className="flex justify-center mt-4">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddBelow();
-                    }}
-                    variant="default"
-                    className="gap-2"
-                  >
-                    Add New Field
-                  </Button>
                 </div>
               </>
             ) : (

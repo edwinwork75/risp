@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import Index from "./pages/Index";
 import FormBuilder from "./pages/form-builder";
+import FormPreview from "./pages/form-builder/preview";
 import NotFound from "./pages/NotFound";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
@@ -17,18 +18,19 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const shouldRenderHeaderAndSidebar = location.pathname !== "/form-builder";
+  const shouldRenderHeaderAndSidebar = location.pathname !== "/form-builder" && location.pathname !== "/form-preview";
 
   return (
     <div className="flex min-h-screen w-full">
       <div className="flex-1 flex flex-col w-full">
-          {shouldRenderHeaderAndSidebar && <AppHeader />}
+        {shouldRenderHeaderAndSidebar && <AppHeader />}
         <main className="flex-1 w-full">
-              {/* {shouldRenderHeaderAndSidebar && <AppSidebar />} */}
+          {/* {shouldRenderHeaderAndSidebar && <AppSidebar />} */}
 
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/form-builder" element={<FormBuilder />} />
+            <Route path="/form-preview" element={<FormPreview />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -46,7 +48,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <SidebarProvider>
-          <AppContent />
+            <AppContent />
           </SidebarProvider>
         </TooltipProvider>
       </BrowserRouter>

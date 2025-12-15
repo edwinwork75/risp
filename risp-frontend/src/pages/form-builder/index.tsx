@@ -1,54 +1,36 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, ClipboardList } from "lucide-react";
+import { ArrowLeft, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStore } from "./store/useFormStore";
-import { FieldEditor } from "@/components/FormBuilder/FieldEditor";
 import { FormHeader } from "@/components/FormBuilder/FormHeader";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { Card, CardContent } from "@/components/ui/card";
+import { SectionNavigation } from "@/components/FormBuilder/SectionNavigation";
+import { FormCanvas } from "@/components/FormBuilder/FormCanvas";
+import { FormToolbar } from "@/components/FormBuilder/FormToolbar";
+import { FieldType } from "@/types/form";
 
 export default function FormBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { title, description, fields, addField, updateField, removeField, duplicateField, moveField, updateFormMetadata } = useFormStore();
+  const {
+    title,
+    description,
+    fields,
+    sections,
+    activeSection,
+    setActiveSection,
+    addSection,
+    updateSection,
+    removeSection,
+    addField,
+    updateField,
+    removeField,
+    duplicateField,
+    moveField,
+    updateFormMetadata
+  } = useFormStore();
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
-  const prevFieldsLength = useRef(fields.length);
-
-  /*
-   * Removed useEffect for auto-focus as it was incorrectly focusing the last field
-   * when inserting in the middle. We now handle focus explicitly in add handlers.
-   */
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = fields.findIndex((f) => f.id === active.id);
-      const newIndex = fields.findIndex((f) => f.id === over.id);
-      moveField(oldIndex, newIndex);
-    }
-  };
 
   const handleSave = () => {
     console.log("Form data:", { title, description, fields });
@@ -58,10 +40,12 @@ export default function FormBuilder() {
     });
   };
 
-  const handleAddField = (index?: number) => {
-    const newFieldId = addField('text', index);
+  const handleAddField = (type: FieldType = 'text', index?: number) => {
+    const newFieldId = addField(type, activeSection, index);
     setActiveFieldId(newFieldId);
   };
+
+  const filteredFields = fields.filter(f => f.section === activeSection);
 
   return (
     <div className="min-h-screen bg-background" onClick={() => setActiveFieldId(null)}>
@@ -80,71 +64,57 @@ export default function FormBuilder() {
             <Save className="h-4 w-4" />
             Save Form
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/form-preview")}
+            title="Preview Form"
+          >
+            <Eye className="h-5 w-5" />
+          </Button>
         </div>
       </div>
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <FormHeader
-          title={title}
-          description={description}
-          onUpdate={updateFormMetadata}
-        />
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={fields.map((f) => f.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {fields.map((field, index) => (
-              <FieldEditor
-                key={field.id}
-                field={field}
-                onUpdate={updateField}
-                onDelete={removeField}
-                onDuplicate={duplicateField}
-                onAddBelow={() => handleAddField(index + 1)}
-                isActive={field.id === activeFieldId}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveFieldId(field.id);
-                }}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr_auto] gap-8 items-start relative">
+          <div className="sticky top-24">
+            <SectionNavigation
+              sections={sections}
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              onAddSection={addSection}
+              onUpdateSection={updateSection}
+              onRemoveSection={removeSection}
+            />
+          </div>
+
+          <div className="space-y-8">
+            {sections.length > 0 && activeSection === sections[0].id && (
+              <FormHeader
+                title={title}
+                description={description}
+                onUpdate={updateFormMetadata}
               />
-            ))}
-          </SortableContext>
-        </DndContext>
+            )}
 
-        {fields.length === 0 && (
-          <Card className="border-dashed border-2">
-            <CardContent className="p-12 text-center">
-              <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                <ClipboardList className="h-16 w-16" />
-                <h2 className="text-2xl font-semibold">No Questions Yet</h2>
-                <p>Click the button below to start building your form.</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            <FormCanvas
+              fields={filteredFields}
+              onReorder={moveField}
+              onUpdate={updateField}
+              onDelete={removeField}
+              onDuplicate={duplicateField}
+              onAddBelow={(index) => handleAddField('text', index)}
+              activeFieldId={activeFieldId}
+              setActiveFieldId={setActiveFieldId}
+              onAddFirst={() => handleAddField('text')}
+            />
+          </div>
 
-        <div className="flex justify-center mt-8 gap-4">
-          <Button
-            onClick={() => handleAddField()}
-            variant="default"
-            className="gap-2"
-          >
-            Add New Field
-          </Button>
-          <Button
-            onClick={() => {
-              const newFieldId = addField('section', undefined);
-              setActiveFieldId(newFieldId);
-            }}
-            variant="outline"
-            className="gap-2 border-dashed"
-          >
-            Add Section
-          </Button>
+          <div className="block">
+            <FormToolbar
+              onAddField={(type) => handleAddField(type)}
+              onAddSection={addSection}
+            />
+          </div>
         </div>
       </div>
     </div>
