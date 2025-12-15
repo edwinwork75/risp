@@ -19,7 +19,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%; /* wowlyx-white */
     --popover-foreground: 0 0% 0%; /* wowlyx-black */
 
-    --primary: 47 100% 61%; /* wowlyx-yellow */
+    --primary: 25 95% 53%; /* wowlyx-orange */
     --primary-foreground: 0 0% 0%; /* wowlyx-black */
 
     --secondary: 41 67% 85%; /* wowlyx-cream-1, adjusted */
@@ -28,7 +28,7 @@ All colors MUST be HSL.
     --muted: 41 67% 91%; /* wowlyx-cream-1 */
     --muted-foreground: 0 0% 0%; /* wowlyx-black */
 
-    --accent: 47 100% 61%; /* wowlyx-yellow */
+    --accent: 25 95% 53%; /* wowlyx-orange */
     --accent-foreground: 0 0% 0%; /* wowlyx-black */
 
     --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
@@ -36,18 +36,18 @@ All colors MUST be HSL.
 
     --border: 41 67% 91%; /* wowlyx-cream-1 */
     --input: 41 67% 91%; /* wowlyx-cream-1 */
-    --ring: 47 100% 61%; /* wowlyx-yellow */
+    --ring: 25 95% 53%; /* wowlyx-orange */
 
     --radius: 0.5rem;
 
     --sidebar-background: 41 67% 91%; /* wowlyx-cream-1 */
     --sidebar-foreground: 0 0% 0%; /* wowlyx-black */
-    --sidebar-primary: 47 100% 61%; /* wowlyx-yellow */
+    --sidebar-primary: 25 95% 53%; /* wowlyx-orange */
     --sidebar-primary-foreground: 0 0% 0%; /* wowlyx-black */
     --sidebar-accent: 42 83% 98%; /* wowlyx-cream-2 */
     --sidebar-accent-foreground: 0 0% 0%; /* wowlyx-black */
     --sidebar-border: 41 67% 91%; /* wowlyx-cream-1 */
-    --sidebar-ring: 47 100% 61%; /* wowlyx-yellow */
+    --sidebar-ring: 25 95% 53%; /* wowlyx-orange */
   }
 
   .dark {
@@ -60,7 +60,7 @@ All colors MUST be HSL.
     --popover: 0 0% 10%; /* Lighter black */
     --popover-foreground: 0 0% 100%; /* wowlyx-white */
 
-    --primary: 47 100% 61%; /* wowlyx-yellow */
+    --primary: 25 95% 53%; /* wowlyx-orange */
     --primary-foreground: 0 0% 0%; /* wowlyx-black */
 
     --secondary: 0 0% 15%; /* Lighter black, adjusted */
@@ -69,7 +69,7 @@ All colors MUST be HSL.
     --muted: 0 0% 10%; /* Lighter black */
     --muted-foreground: 0 0% 100%; /* wowlyx-white */
 
-    --accent: 47 100% 61%; /* wowlyx-yellow */
+    --accent: 25 95% 53%; /* wowlyx-orange */
     --accent-foreground: 0 0% 0%; /* wowlyx-black */
 
     --destructive: 0 62.8% 30.6%; /* Red for destructive actions */
@@ -81,7 +81,7 @@ All colors MUST be HSL.
 
     --sidebar-background: 0 0% 10%; /* Lighter black */
     --sidebar-foreground: 0 0% 100%; /* wowlyx-white */
-    --sidebar-primary: 47 100% 61%; /* wowlyx-yellow */
+    --sidebar-primary: 25 95% 53%; /* wowlyx-orange */
     --sidebar-primary-foreground: 0 0% 0%; /* wowlyx-black */
     --sidebar-accent: 0 0% 10%; /* Lighter black */
     --sidebar-accent-foreground: 0 0% 100%; /* wowlyx-white */

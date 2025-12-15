@@ -1,14 +1,13 @@
-export type FieldType = 
-  | 'text' 
-  | 'number' 
-  | 'phone' 
-  | 'dropdown' 
-  | 'radio' 
-  | 'checkbox' 
-  | 'date' 
-  | 'time' 
+export type FieldType =
+  | 'text'
+  | 'dropdown'
+  | 'radio'
+  | 'checkbox'
+  | 'date'
+  | 'time'
   | 'file'
-  | 'image';
+  | 'image'
+  | 'section';
 
 export interface FormField {
   id: string;

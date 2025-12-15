@@ -5,6 +5,7 @@ import { ArrowLeft, Save, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStore } from "./store/useFormStore";
 import { FieldEditor } from "@/components/FormBuilder/FieldEditor";
+import { FormHeader } from "@/components/FormBuilder/FormHeader";
 import {
   DndContext,
   closestCenter,
@@ -24,20 +25,14 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function FormBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { fields, addField, updateField, removeField, duplicateField, moveField } = useFormStore();
+  const { title, description, fields, addField, updateField, removeField, duplicateField, moveField, updateFormMetadata } = useFormStore();
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
   const prevFieldsLength = useRef(fields.length);
 
-  useEffect(() => {
-    if (fields.length > prevFieldsLength.current) {
-      const newField = fields[fields.length - 1];
-      if (newField) {
-        setActiveFieldId(newField.id);
-      }
-    }
-    prevFieldsLength.current = fields.length;
-  }, [fields]);
-
+  /*
+   * Removed useEffect for auto-focus as it was incorrectly focusing the last field
+   * when inserting in the middle. We now handle focus explicitly in add handlers.
+   */
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -56,11 +51,16 @@ export default function FormBuilder() {
   };
 
   const handleSave = () => {
-    console.log("Form data:", fields);
+    console.log("Form data:", { title, description, fields });
     toast({
       title: "Form Saved",
       description: "Your form has been saved successfully.",
     });
+  };
+
+  const handleAddField = (index?: number) => {
+    const newFieldId = addField('text', index);
+    setActiveFieldId(newFieldId);
   };
 
   return (
@@ -83,6 +83,11 @@ export default function FormBuilder() {
         </div>
       </div>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
+        <FormHeader
+          title={title}
+          description={description}
+          onUpdate={updateFormMetadata}
+        />
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -92,13 +97,14 @@ export default function FormBuilder() {
             items={fields.map((f) => f.id)}
             strategy={verticalListSortingStrategy}
           >
-            {fields.map((field) => (
+            {fields.map((field, index) => (
               <FieldEditor
                 key={field.id}
                 field={field}
                 onUpdate={updateField}
                 onDelete={removeField}
                 onDuplicate={duplicateField}
+                onAddBelow={() => handleAddField(index + 1)}
                 isActive={field.id === activeFieldId}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -121,14 +127,24 @@ export default function FormBuilder() {
           </Card>
         )}
 
-        <div className="flex justify-center mt-8">
-            <Button
-                onClick={() => addField('text')}
-                variant="default"
-                className="gap-2"
-            >
-                Add New Field
-            </Button>
+        <div className="flex justify-center mt-8 gap-4">
+          <Button
+            onClick={() => handleAddField()}
+            variant="default"
+            className="gap-2"
+          >
+            Add New Field
+          </Button>
+          <Button
+            onClick={() => {
+              const newFieldId = addField('section', undefined);
+              setActiveFieldId(newFieldId);
+            }}
+            variant="outline"
+            className="gap-2 border-dashed"
+          >
+            Add Section
+          </Button>
         </div>
       </div>
     </div>

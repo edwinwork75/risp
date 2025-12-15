@@ -3,8 +3,11 @@ import { create } from "zustand";
 import { arrayMove } from "@dnd-kit/sortable";
 
 interface FormStore {
+    title: string;
+    description: string;
     fields: FormField[];
-    addField: (type: FieldType) => void;
+    updateFormMetadata: (metadata: { title?: string; description?: string }) => void;
+    addField: (type: FieldType, index?: number) => string;
     updateField: (id: string, updatedField: Partial<FormField>) => void;
     removeField: (id: string) => void;
     duplicateField: (id: string) => void;
@@ -13,8 +16,11 @@ interface FormStore {
 }
 
 export const useFormStore = create<FormStore>((set) => ({
+    title: "Untitled Form",
+    description: "",
     fields: [],
-    addField: (type: FieldType) => set((state) => {
+    updateFormMetadata: (metadata) => set((state) => ({ ...state, ...metadata })),
+    addField: (type: FieldType, index?: number) => {
         const newField: FormField = {
             id: `field-${Date.now()}`,
             type,
@@ -24,13 +30,23 @@ export const useFormStore = create<FormStore>((set) => ({
                 ? ['']
                 : undefined,
         };
-        return { fields: [...state.fields, newField] };
-    }),
+
+        set((state) => {
+            if (index !== undefined) {
+                const newFields = [...state.fields];
+                newFields.splice(index, 0, newField);
+                return { fields: newFields };
+            }
+            return { fields: [...state.fields, newField] };
+        });
+
+        return newField.id;
+    },
     updateField: (id, updatedField) => set((state) => ({
-       fields:state.fields.map((field)=>field.id===id?{...field,...updatedField}:field)
+        fields: state.fields.map((field) => field.id === id ? { ...field, ...updatedField } : field)
     })),
     removeField: (id) => set((state) => ({
-        fields:state.fields.filter((field)=>field.id!==id)
+        fields: state.fields.filter((field) => field.id !== id)
     })),
     duplicateField: (id) => set((state) => {
         const fieldToDuplicate = state.fields.find((f) => f.id === id);
@@ -39,7 +55,7 @@ export const useFormStore = create<FormStore>((set) => ({
         const duplicatedField: FormField = {
             ...fieldToDuplicate,
             id: `field-${Date.now()}`,
-            label: `${fieldToDuplicate.label} (Copy)`,
+            label: `${fieldToDuplicate.label} `,
         };
         const index = state.fields.findIndex((f) => f.id === id);
         const newFields = [...state.fields];
@@ -49,5 +65,5 @@ export const useFormStore = create<FormStore>((set) => ({
     moveField: (fromIndex, toIndex) => set((state) => ({
         fields: arrayMove(state.fields, fromIndex, toIndex),
     })),
-    resetForm: ()=>set({fields:[]}),
+    resetForm: () => set({ fields: [] }),
 }));
