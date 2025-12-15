@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 42 83% 96%; /* wowlyx-cream-2 adjusted */
+    --foreground: 0 0% 0%; /* wowlyx-black */
+
+    --card: 0 0% 100%; /* wowlyx-white */
+    --card-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --popover: 0 0% 100%; /* wowlyx-white */
+    --popover-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --primary: 47 100% 61%; /* wowlyx-yellow */
+    --primary-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --secondary: 41 67% 85%; /* wowlyx-cream-1, adjusted */
+    --secondary-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --muted: 41 67% 91%; /* wowlyx-cream-1 */
+    --muted-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --accent: 47 100% 61%; /* wowlyx-yellow */
+    --accent-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* wowlyx-white */
+
+    --border: 41 67% 91%; /* wowlyx-cream-1 */
+    --input: 41 67% 91%; /* wowlyx-cream-1 */
+    --ring: 47 100% 61%; /* wowlyx-yellow */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 41 67% 91%; /* wowlyx-cream-1 */
+    --sidebar-foreground: 0 0% 0%; /* wowlyx-black */
+    --sidebar-primary: 47 100% 61%; /* wowlyx-yellow */
+    --sidebar-primary-foreground: 0 0% 0%; /* wowlyx-black */
+    --sidebar-accent: 42 83% 98%; /* wowlyx-cream-2 */
+    --sidebar-accent-foreground: 0 0% 0%; /* wowlyx-black */
+    --sidebar-border: 41 67% 91%; /* wowlyx-cream-1 */
+    --sidebar-ring: 47 100% 61%; /* wowlyx-yellow */
+  }
+
+  .dark {
+    --background: 0 0% 5%; /* Lighter black */
+    --foreground: 0 0% 100%; /* wowlyx-white */
+
+    --card: 0 0% 10%; /* Lighter black */
+    --card-foreground: 0 0% 100%; /* wowlyx-white */
+
+    --popover: 0 0% 10%; /* Lighter black */
+    --popover-foreground: 0 0% 100%; /* wowlyx-white */
+
+    --primary: 47 100% 61%; /* wowlyx-yellow */
+    --primary-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --secondary: 0 0% 15%; /* Lighter black, adjusted */
+    --secondary-foreground: 0 0% 100%; /* wowlyx-white */
+
+    --muted: 0 0% 10%; /* Lighter black */
+    --muted-foreground: 0 0% 100%; /* wowlyx-white */
+
+    --accent: 47 100% 61%; /* wowlyx-yellow */
+    --accent-foreground: 0 0% 0%; /* wowlyx-black */
+
+    --destructive: 0 62.8% 30.6%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* wowlyx-white */
+
+    --border: 0 0% 10%; /* Lighter black */
+    --input: 0 0% 10%; /* Lighter black */
+    --ring: 0 0% 100%; /* wowlyx-white */
+
+    --sidebar-background: 0 0% 10%; /* Lighter black */
+    --sidebar-foreground: 0 0% 100%; /* wowlyx-white */
+    --sidebar-primary: 47 100% 61%; /* wowlyx-yellow */
+    --sidebar-primary-foreground: 0 0% 0%; /* wowlyx-black */
+    --sidebar-accent: 0 0% 10%; /* Lighter black */
+    --sidebar-accent-foreground: 0 0% 100%; /* wowlyx-white */
+    --sidebar-border: 0 0% 10%; /* Lighter black */
+    --sidebar-ring: 0 0% 100%; /* wowlyx-white */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Smooth theme transitions */
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+}
