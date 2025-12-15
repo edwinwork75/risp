@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useFormStore } from "./store/useFormStore";
+import { ChecklistRenderer } from "@/components/FormBuilder/ChecklistRenderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -185,6 +186,14 @@ export default function FormPreview() {
                                                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 text-center cursor-pointer hover:bg-gray-100 transition-colors">
                                                                 <p className="text-gray-500">Tap to Sign (Simulation)</p>
                                                             </div>
+                                                        );
+                                                    case 'inspection_checklist':
+                                                        return (
+                                                            <ChecklistRenderer
+                                                                config={field.checklistConfig}
+                                                                value={formValues[field.id]}
+                                                                onChange={(val) => handleValueChange(field.id, val)}
+                                                            />
                                                         );
                                                     default:
                                                         return null;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStore } from "./store/useFormStore";
@@ -60,18 +61,30 @@ export default function FormBuilder() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <Button onClick={handleSave} className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Form
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/form-preview")}
-            title="Preview Form"
-          >
-            <Eye className="h-5 w-5" />
-          </Button>
+
+          <div className="flex-1 max-w-md mx-4 hidden md:block">
+            <Input
+              value={title}
+              onChange={(e) => updateFormMetadata({ title: e.target.value })}
+              className="text-center font-medium border-transparent hover:border-input focus:border-input transition-colors bg-transparent"
+              placeholder="Untitled Form"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/form-preview")}
+              title="Preview Form"
+            >
+              <Eye className="h-5 w-5" />
+            </Button>
+            <Button onClick={handleSave} className="gap-2">
+              <Save className="h-4 w-4" />
+              Save Form
+            </Button>
+          </div>
         </div>
       </div>
       <div className="container mx-auto px-4 py-8 max-w-6xl">

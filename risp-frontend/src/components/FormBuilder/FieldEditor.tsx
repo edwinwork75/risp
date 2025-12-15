@@ -4,7 +4,9 @@ import { SectionEditor } from "./SectionEditor";
 import { FormField, FieldType } from "@/types/form";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy, Type, CheckSquare, ChevronDown, ToggleLeft, Calendar, Clock, File, FileImage, Heading, PenTool, AlignLeft } from "lucide-react";
+import { GripVertical, Trash2, Copy, Type, CheckSquare, ChevronDown, ToggleLeft, Calendar, Clock, File, FileImage, Heading, PenTool, AlignLeft, ClipboardCheck } from "lucide-react";
+import { ChecklistBuilder } from "./ChecklistBuilder";
+import { ChecklistRenderer } from "./ChecklistRenderer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,6 +48,7 @@ const fieldTypeIcons: Record<FieldType, JSX.Element> = {
   section: <Heading className="h-4 w-4" />,
   signature: <PenTool className="h-4 w-4" />,
   textarea: <AlignLeft className="h-4 w-4" />,
+  inspection_checklist: <ClipboardCheck className="h-4 w-4" />,
 };
 
 const renderPreview = (field: FormField) => {
@@ -108,6 +111,12 @@ const renderPreview = (field: FormField) => {
           </div>
         </div>
       );
+    case 'inspection_checklist':
+      return (
+        <div className="mt-4">
+          <ChecklistRenderer config={field.checklistConfig} readOnly />
+        </div>
+      );
     default:
       return null;
   }
@@ -131,7 +140,7 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
 
 
   const fieldTypes: FieldType[] = [
-    'text', 'textarea', 'dropdown', 'radio', 'checkbox', 'date', 'time', 'file', 'image', 'signature'
+    'text', 'textarea', 'dropdown', 'radio', 'checkbox', 'date', 'time', 'file', 'image', 'signature', 'inspection_checklist'
   ];
 
   return (
@@ -199,6 +208,15 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
                     options={field.options || []}
                     onUpdate={(newOptions) => onUpdate(field.id, { options: newOptions })}
                   />
+                )}
+
+                {field.type === 'inspection_checklist' && (
+                  <div className="mt-4 border-t pt-4">
+                    <ChecklistBuilder
+                      config={field.checklistConfig}
+                      onChange={(newConfig) => onUpdate(field.id, { checklistConfig: newConfig })}
+                    />
+                  </div>
                 )}
 
                 <div className="flex items-center justify-end gap-2 pt-4 border-t">
