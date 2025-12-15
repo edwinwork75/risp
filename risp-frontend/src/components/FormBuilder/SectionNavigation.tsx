@@ -8,7 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
 interface SectionNavigationProps {
@@ -75,6 +75,7 @@ export function SectionNavigation({
 
                             {editingId === section.id ? (
                                 <Input
+                                    key={`rename-${section.id}`}
                                     value={editTitle}
                                     onChange={(e) => setEditTitle(e.target.value)}
                                     onBlur={saveEditing}
@@ -98,7 +99,7 @@ export function SectionNavigation({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="h-6 w-6 text-gray-400 hover:text-gray-600"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <MoreVertical className="h-3 w-3" />

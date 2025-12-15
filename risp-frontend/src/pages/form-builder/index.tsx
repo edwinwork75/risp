@@ -88,7 +88,7 @@ export default function FormBuilder() {
         </div>
       </div>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr_auto] gap-8 items-start relative">
+        <div className="grid grid-cols-1 md:grid-cols-[250px_minmax(0,1fr)_auto] gap-8 items-start relative">
           <div className="sticky top-24">
             <SectionNavigation
               sections={sections}
@@ -119,11 +119,6 @@ export default function FormBuilder() {
               activeFieldId={activeFieldId}
               setActiveFieldId={setActiveFieldId}
               onAddFirst={() => handleAddField('text')}
-            />
-          </div>
-
-          <div className="block">
-            <FormToolbar
               onAddField={(type) => handleAddField(type)}
               onAddSection={addSection}
             />

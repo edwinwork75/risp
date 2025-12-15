@@ -18,6 +18,137 @@ interface ChecklistRendererProps {
     readOnly?: boolean;
 }
 
+
+interface ChecklistCellProps {
+    row: import('@/types/form').ChecklistRow;
+    col: import('@/types/form').ChecklistColumn;
+    cellData: ChecklistCellData;
+    onValueChange: (inputId: string, value: any) => void;
+    onCommentChange: (comment: string) => void;
+    readOnly: boolean;
+}
+
+const ChecklistCell: React.FC<ChecklistCellProps> = ({ row, col, cellData, onValueChange, onCommentChange, readOnly }) => {
+    const [showComment, setShowComment] = useState(!!cellData.comment);
+
+    const handleFileChange = (inputId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            // For now, just storing the file name. 
+            // In a real app, you'd upload this and store the URL/ID.
+            onValueChange(inputId, e.target.files[0].name);
+        }
+    };
+
+    return (
+        <div className="space-y-2">
+            <div className="flex flex-col gap-2">
+                {col.inputs.map(input => {
+                    const val = cellData.values[input.id];
+
+                    return (
+                        <div key={input.id} className="flex items-center gap-2">
+                            {input.type === 'checkbox' && (
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        checked={val === true}
+                                        onCheckedChange={(checked) => onValueChange(input.id, checked)}
+                                        disabled={readOnly}
+                                        id={`${row.id}-${col.id}-${input.id}`}
+                                    />
+                                    {input.label && <label htmlFor={`${row.id}-${col.id}-${input.id}`} className="text-sm text-gray-700 cursor-pointer">{input.label}</label>}
+                                </div>
+                            )}
+
+                            {input.type === 'text' && (
+                                <Input
+                                    value={val || ''}
+                                    onChange={(e) => onValueChange(input.id, e.target.value)}
+                                    placeholder={input.label}
+                                    disabled={readOnly}
+                                    className="h-8 text-sm"
+                                />
+                            )}
+                            {input.type === 'number' && (
+                                <Input
+                                    type="number"
+                                    value={val || ''}
+                                    onChange={(e) => onValueChange(input.id, e.target.value)}
+                                    placeholder={input.label}
+                                    disabled={readOnly}
+                                    className="h-8 text-sm"
+                                />
+                            )}
+
+
+                            {input.type === 'date' && (
+                                <Input
+                                    type="date"
+                                    value={val || ''}
+                                    onChange={(e) => onValueChange(input.id, e.target.value)}
+                                    disabled={readOnly}
+                                    className="h-8 text-sm w-full"
+                                />
+                            )}
+
+                            {input.type === 'select' && (
+                                <Select value={val} onValueChange={(v) => onValueChange(input.id, v)} disabled={readOnly}>
+                                    <SelectTrigger className="h-8 text-sm w-full">
+                                        <SelectValue placeholder={input.label || "Select"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {input.options?.map(opt => (
+                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+
+                            {input.type === 'file' && (
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="file"
+                                        onChange={(e) => handleFileChange(input.id, e)}
+                                        disabled={readOnly}
+                                        className="h-8 text-sm w-full cursor-pointer text-xs file:mr-2 file:py-0 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                                    />
+                                    {val && <span className="text-xs text-gray-500 truncate max-w-[100px]" title={val}>{val}</span>}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Capabilities: Comments & Attachments */}
+            {(col.capabilities.allowComments || col.capabilities.allowAttachments) && (
+                <div className="flex flex-col gap-1 mt-1">
+                    <div className="flex items-center gap-1 justify-end opacity-50 hover:opacity-100 transition-opacity">
+                        {col.capabilities.allowComments && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowComment(!showComment)} title="Add Comment">
+                                <MessageSquare className={cn("h-3 w-3", cellData.comment ? "text-blue-500 fill-blue-500" : "text-gray-400")} />
+                            </Button>
+                        )}
+                        {col.capabilities.allowAttachments && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6" title="Add Attachment" disabled={readOnly}>
+                                <Paperclip className="h-3 w-3 text-gray-400" />
+                            </Button>
+                        )}
+                    </div>
+                    {showComment && col.capabilities.allowComments && (
+                        <Textarea
+                            value={cellData.comment || ''}
+                            onChange={(e) => onCommentChange(e.target.value)}
+                            placeholder="Add comment..."
+                            className="min-h-[60px] text-xs resize-y"
+                            disabled={readOnly}
+                        />
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const ChecklistRenderer: React.FC<ChecklistRendererProps> = ({ config, value = {}, onChange, readOnly = false }) => {
     // If no config, render nothing or placeholder
     if (!config || !config.columns || config.columns.length === 0) {
@@ -106,82 +237,18 @@ export const ChecklistRenderer: React.FC<ChecklistRendererProps> = ({ config, va
                                                         </TableCell>
                                                     );
                                                 }
-
-                                                // Handle 'Input' Columns
                                                 const cellData = value[row.id]?.[col.id] || { values: {} };
 
                                                 return (
-                                                    <TableCell key={col.id} className="border-l align-top py-4">
-                                                        <div className="space-y-3">
-
-                                                            {/* Inputs */}
-                                                            <div className="flex flex-col gap-2">
-                                                                {col.inputs.map(input => (
-                                                                    <div key={input.id} className={cn("flex flex-col gap-1", input.type === 'checkbox' ? 'flex-row items-center' : '')}>
-                                                                        {input.label && <span className="text-xs text-muted-foreground">{input.label}</span>}
-
-                                                                        {input.type === 'checkbox' && (
-                                                                            <Checkbox
-                                                                                checked={!!cellData.values[input.id]}
-                                                                                onCheckedChange={(c) => handleCellChange(row.id, col.id, input.id, c)}
-                                                                                disabled={readOnly}
-                                                                            />
-                                                                        )}
-                                                                        {input.type === 'text' && (
-                                                                            <Input
-                                                                                value={cellData.values[input.id] || ''}
-                                                                                onChange={(e) => handleCellChange(row.id, col.id, input.id, e.target.value)}
-                                                                                className="h-8 text-xs"
-                                                                                disabled={readOnly}
-                                                                            />
-                                                                        )}
-                                                                        {input.type === 'date' && (
-                                                                            <Input
-                                                                                type="date"
-                                                                                value={cellData.values[input.id] || ''}
-                                                                                onChange={(e) => handleCellChange(row.id, col.id, input.id, e.target.value)}
-                                                                                className="h-8 text-xs"
-                                                                                disabled={readOnly}
-                                                                            />
-                                                                        )}
-                                                                        {/* Placeholder for other types */}
-                                                                        {input.type === 'select' && <div className="text-xs italic text-gray-400">Select supported</div>}
-                                                                        {input.type === 'file' && <div className="text-xs italic text-gray-400">File upload supported</div>}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-
-                                                            {/* Capabilities: Comments / Files */}
-                                                            {(col.capabilities.allowComments || col.capabilities.allowAttachments) && (
-                                                                <div className="flex gap-2 justify-end pt-2">
-                                                                    {col.capabilities.allowComments && (
-                                                                        <Popover>
-                                                                            <PopoverTrigger asChild>
-                                                                                <Button variant="ghost" size="sm" className={cn("h-6 w-6 p-0", cellData.comment ? "text-blue-600 bg-blue-50" : "text-gray-400")}>
-                                                                                    <MessageSquare className="h-3 w-3" />
-                                                                                </Button>
-                                                                            </PopoverTrigger>
-                                                                            <PopoverContent className="w-80">
-                                                                                <div className="space-y-2">
-                                                                                    <h4 className="font-medium leading-none">Comment</h4>
-                                                                                    <Textarea
-                                                                                        value={cellData.comment || ''}
-                                                                                        onChange={(e) => handleCommentChange(row.id, col.id, e.target.value)}
-                                                                                        placeholder="Add a comment..."
-                                                                                        disabled={readOnly}
-                                                                                    />
-                                                                                </div>
-                                                                            </PopoverContent>
-                                                                        </Popover>
-                                                                    )}
-                                                                    {col.capabilities.allowAttachments && (
-                                                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-400" disabled>
-                                                                            <Paperclip className="h-3 w-3" />
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                    <TableCell key={col.id} className={cn("border-l border-gray-100 align-top py-2 px-2")}>
+                                                        <ChecklistCell
+                                                            row={row}
+                                                            col={col}
+                                                            cellData={cellData}
+                                                            onValueChange={(inputId, val) => handleCellChange(row.id, col.id, inputId, val)}
+                                                            onCommentChange={(comment) => handleCommentChange(row.id, col.id, comment)}
+                                                            readOnly={readOnly}
+                                                        />
                                                     </TableCell>
                                                 )
                                             })}

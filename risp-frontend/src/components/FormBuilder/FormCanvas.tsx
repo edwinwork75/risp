@@ -29,6 +29,8 @@ interface FormCanvasProps {
     activeFieldId: string | null;
     setActiveFieldId: (id: string | null) => void;
     onAddFirst: () => void;
+    onAddField: (type: import("@/types/form").FieldType) => void;
+    onAddSection: () => void;
 }
 
 export function FormCanvas({
@@ -41,6 +43,8 @@ export function FormCanvas({
     activeFieldId,
     setActiveFieldId,
     onAddFirst,
+    onAddField,
+    onAddSection,
 }: FormCanvasProps) {
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -113,6 +117,8 @@ export function FormCanvas({
                                     setActiveFieldId(field.id);
                                 }}
                                 index={showNumber ? questionIndex : undefined}
+                                onAddField={onAddField}
+                                onAddSection={onAddSection}
                             />
                         );
                     })}
@@ -120,4 +126,5 @@ export function FormCanvas({
             </SortableContext>
         </DndContext>
     );
+
 }

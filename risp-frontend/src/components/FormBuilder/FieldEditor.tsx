@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import { FormToolbar } from "./FormToolbar";
 
 interface FieldEditorProps {
   field: FormField;
@@ -34,6 +35,8 @@ interface FieldEditorProps {
   isActive: boolean;
   onClick: (event: React.MouseEvent) => void;
   index?: number;
+  onAddField: (type: FieldType) => void;
+  onAddSection: () => void;
 }
 
 const fieldTypeIcons: Record<FieldType, JSX.Element> = {
@@ -49,6 +52,21 @@ const fieldTypeIcons: Record<FieldType, JSX.Element> = {
   signature: <PenTool className="h-4 w-4" />,
   textarea: <AlignLeft className="h-4 w-4" />,
   inspection_checklist: <ClipboardCheck className="h-4 w-4" />,
+};
+
+const fieldTypeLabels: Record<FieldType, string> = {
+  text: 'Short Text',
+  textarea: 'Long Text',
+  dropdown: 'Dropdown',
+  radio: 'Multiple Choice',
+  checkbox: 'Checkboxes',
+  date: 'Date',
+  time: 'Time',
+  file: 'File Upload',
+  image: 'Image',
+  section: 'Section',
+  signature: 'Signature',
+  inspection_checklist: 'Checklist',
 };
 
 const renderPreview = (field: FormField) => {
@@ -113,7 +131,7 @@ const renderPreview = (field: FormField) => {
       );
     case 'inspection_checklist':
       return (
-        <div className="mt-4">
+        <div className="mt-4 w-full overflow-x-auto">
           <ChecklistRenderer config={field.checklistConfig} readOnly />
         </div>
       );
@@ -124,7 +142,7 @@ const renderPreview = (field: FormField) => {
 
 
 
-export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow, isActive, onClick, index }: FieldEditorProps) {
+export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow, isActive, onClick, index, onAddField, onAddSection }: FieldEditorProps) {
   const {
     attributes,
     listeners,
@@ -145,6 +163,13 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} className="relative group" onClick={onClick}>
+      {isActive && (
+        <FormToolbar
+          embedded
+          onAddField={onAddField}
+          onAddSection={onAddSection}
+        />
+      )}
       <Card className={cn("mb-3 border-l-[6px]", {
         "border-[#FFD539]": field.type === 'section',
         "border-primary": field.type !== 'section' && isActive,
@@ -195,7 +220,7 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
                       <SelectContent>
                         {fieldTypes.map((type) => (
                           <SelectItem key={type} value={type}>
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                            {fieldTypeLabels[type]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -253,7 +278,7 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
                     </div>
                     <Badge variant="outline" className="flex items-center gap-2">
                       {fieldTypeIcons[field.type]}
-                      <span className="capitalize">{field.type}</span>
+                      <span className="capitalize">{fieldTypeLabels[field.type]}</span>
                     </Badge>
                   </div>
                   <div className="mt-2">
