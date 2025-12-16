@@ -4,7 +4,7 @@ import { SectionEditor } from "./SectionEditor";
 import { FormField, FieldType } from "@/types/form";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy, Type, CheckSquare, ChevronDown, ToggleLeft, Calendar, Clock, File, FileImage, Heading, PenTool, AlignLeft, ClipboardCheck } from "lucide-react";
+import { GripVertical, Trash2, Copy, Type, CheckSquare, ChevronDown, ToggleLeft, Calendar, Clock, File, FileImage, Heading, PenTool, AlignLeft, ClipboardCheck, CalendarClock } from "lucide-react";
 import { ChecklistBuilder } from "./ChecklistBuilder";
 import { ChecklistRenderer } from "./ChecklistRenderer";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ const fieldTypeIcons: Record<FieldType, JSX.Element> = {
   checkbox: <CheckSquare className="h-4 w-4" />,
   date: <Calendar className="h-4 w-4" />,
   time: <Clock className="h-4 w-4" />,
+  datetime: <CalendarClock className="h-4 w-4" />,
   file: <File className="h-4 w-4" />,
   image: <FileImage className="h-4 w-4" />,
   section: <Heading className="h-4 w-4" />,
@@ -62,6 +63,7 @@ const fieldTypeLabels: Record<FieldType, string> = {
   checkbox: 'Checkboxes',
   date: 'Date',
   time: 'Time',
+  datetime: 'Date & Time',
   file: 'File Upload',
   image: 'Image',
   section: 'Section',
@@ -77,6 +79,7 @@ const renderPreview = (field: FormField) => {
       return <Textarea placeholder={field.placeholder || "Long answer text"} disabled className="mt-2 placeholder-gray-500 min-h-[100px]" />;
     case 'date':
     case 'time':
+    case 'datetime':
       return <Input placeholder={field.placeholder || `Enter ${field.type}`} disabled className="mt-2 placeholder-gray-500" />;
     case 'dropdown':
     case 'radio':
@@ -140,8 +143,6 @@ const renderPreview = (field: FormField) => {
   }
 }
 
-
-
 export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow, isActive, onClick, index, onAddField, onAddSection }: FieldEditorProps) {
   const {
     attributes,
@@ -158,7 +159,7 @@ export function FieldEditor({ field, onUpdate, onDelete, onDuplicate, onAddBelow
 
 
   const fieldTypes: FieldType[] = [
-    'text', 'textarea', 'dropdown', 'radio', 'checkbox', 'date', 'time', 'file', 'image', 'signature', 'inspection_checklist'
+    'text', 'textarea', 'dropdown', 'radio', 'checkbox', 'date', 'time', 'datetime', 'file', 'image', 'signature', 'inspection_checklist'
   ];
 
   return (

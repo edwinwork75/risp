@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChecklistConfig, ChecklistColumn, ChecklistSection, ChecklistRow, ChecklistInput } from '@/types/form';
+import { toAlpha, toRoman } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,6 +64,8 @@ const SortableInputItem = ({ input, columnId, onUpdate, onRemove }: SortableInpu
                     <SelectItem value="checkbox">Checkbox</SelectItem>
                     <SelectItem value="text">Text</SelectItem>
                     <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="datetime">Date & Time</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
                     <SelectItem value="file">File</SelectItem>
                     <SelectItem value="select">Select</SelectItem>
                 </SelectContent>
@@ -348,11 +351,12 @@ export const ChecklistBuilder: React.FC<ChecklistBuilderProps> = ({ config = DEF
 
                 {/* --- SECTIONS & ROWS TAB --- */}
                 <TabsContent value="structure" className="space-y-4 pt-4">
-                    {config.sections.map((section) => (
+                    {config.sections.map((section, index) => (
                         <Card key={section.id} className="border-l-4 border-l-blue-500">
                             <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
                                 <div className="flex items-center gap-2 flex-grow">
                                     <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                                    <span className="font-bold text-gray-500 w-6">{toAlpha(index)}.</span>
                                     <Input
                                         value={section.title}
                                         onChange={(e) => updateSection(section.id, e.target.value)}
@@ -365,9 +369,10 @@ export const ChecklistBuilder: React.FC<ChecklistBuilderProps> = ({ config = DEF
                             </CardHeader>
                             <CardContent className="pt-0 px-4 pb-4">
                                 <div className="space-y-2 ml-6 border-l pl-4">
-                                    {config.rows.filter(r => r.sectionId === section.id).map(row => (
+                                    {config.rows.filter(r => r.sectionId === section.id).map((row, rowIndex) => (
                                         <div key={row.id} className="space-y-2 p-2 rounded-md hover:bg-gray-100/50">
                                             <div className="flex items-center gap-2">
+                                                <span className="text-xs text-gray-400 min-w-[30px] text-right font-mono">{toRoman(rowIndex + 1)}.</span>
                                                 <Input
                                                     value={row.text}
                                                     onChange={(e) => updateRow(row.id, e.target.value)}

@@ -34,10 +34,21 @@ export default function FormBuilder() {
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
   const handleSave = () => {
-    console.log("Form data:", { title, description, fields });
+    const pages = sections.map(section => ({
+      id: section.id,
+      title: section.title,
+      fields: fields.filter(f => f.section === section.id)
+    }));
+
+    console.log("Form Data (Separated by Pages):", {
+      formTitle: title,
+      formDescription: description,
+      pages
+    });
+
     toast({
       title: "Form Saved",
-      description: "Your form has been saved successfully.",
+      description: "Form data has been logged to console by pages.",
     });
   };
 

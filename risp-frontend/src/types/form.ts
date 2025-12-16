@@ -10,6 +10,7 @@ export type FieldType =
   | 'section'
   | 'signature'
   | 'textarea'
+  | 'datetime'
   | 'inspection_checklist';
 
 export interface Section {
@@ -21,7 +22,7 @@ export interface Section {
 // Checklist Types
 export interface ChecklistInput {
   id: string;
-  type: 'checkbox' | 'text' | 'number' | 'date' | 'select' | 'file';
+  type: 'checkbox' | 'text' | 'number' | 'date' | 'select' | 'file' | 'datetime';
   label?: string;
   options?: string[];
   required?: boolean;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChecklistConfig, checklistPayload, ChecklistCellData } from '@/types/form';
+import { cn, toAlpha, toRoman } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MessageSquare, Paperclip, ChevronDown, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from '@/components/ui/badge';
-import { cn } from "@/lib/utils";
 
 interface ChecklistRendererProps {
     config?: ChecklistConfig;
@@ -79,10 +79,9 @@ const ChecklistCell: React.FC<ChecklistCellProps> = ({ row, col, cellData, onVal
                                 />
                             )}
 
-
-                            {input.type === 'date' && (
+                            {input.type === 'datetime' && (
                                 <Input
-                                    type="date"
+                                    type="datetime-local"
                                     value={val || ''}
                                     onChange={(e) => onValueChange(input.id, e.target.value)}
                                     disabled={readOnly}
@@ -203,9 +202,8 @@ export const ChecklistRenderer: React.FC<ChecklistRendererProps> = ({ config, va
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {config.sections.map(section => {
+                        {config.sections.map((section, index) => {
                             const sectionRows = config.rows.filter(r => r.sectionId === section.id);
-                            if (sectionRows.length === 0) return null;
 
                             return (
                                 <React.Fragment key={section.id}>
@@ -214,16 +212,20 @@ export const ChecklistRenderer: React.FC<ChecklistRendererProps> = ({ config, va
                                         <TableCell colSpan={config.columns.length + 1} className="font-semibold py-2">
                                             <div className="flex items-center gap-2">
                                                 {expandedSections[section.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                                {section.title}
+                                                <span className="font-bold">{toAlpha(index)}.</span>
+                                                <span>{section.title}</span>
                                             </div>
                                         </TableCell>
                                     </TableRow>
 
                                     {/* Rows */}
-                                    {expandedSections[section.id] && sectionRows.map(row => (
+                                    {expandedSections[section.id] && sectionRows.map((row, rowIndex) => (
                                         <TableRow key={row.id}>
                                             <TableCell className="font-medium align-top py-4">
-                                                {row.text}
+                                                <div className="flex gap-2">
+                                                    <span className="text-gray-500 min-w-[30px] text-right font-mono flex-shrink-0">{toRoman(rowIndex + 1)}.</span>
+                                                    <span>{row.text}</span>
+                                                </div>
                                             </TableCell>
                                             {config.columns.map(col => {
 
